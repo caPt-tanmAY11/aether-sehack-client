@@ -134,6 +134,24 @@ export default function AdminHomeScreen() {
           <Ionicons name="chevron-forward" size={20} color="#64748b" />
         </TouchableOpacity>
       )}
+
+      {(role === 'hod' || role === 'dean' || role === 'superadmin') && (
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('RaiseDue')}
+          className="bg-card p-4 rounded-2xl border border-border mb-4 flex-row items-center justify-between"
+        >
+          <View className="flex-row items-center">
+            <View className="w-10 h-10 rounded-full bg-error/20 items-center justify-center mr-3">
+              <Ionicons name="cash" size={20} color="#ef4444" />
+            </View>
+            <View>
+              <Text className="text-white font-bold text-lg">Issue Fine/Bill</Text>
+              <Text className="text-muted text-sm">Raise student dues</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#64748b" />
+        </TouchableOpacity>
+      )}
       
       <View className="h-20" />
     </ScrollView>

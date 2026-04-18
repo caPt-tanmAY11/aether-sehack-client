@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { useNotificationsStore } from '../../store/notifications.store';
 import { attendanceApi } from '../../api/attendance.api';
 import { timetableApi } from '../../api/timetable.api';
+import { paymentsApi } from '../../api/payments.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -16,16 +17,19 @@ export default function HomeScreen() {
   const [attendance, setAttendance] = useState(null);
   const [nextClass, setNextClass] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [outstanding, setOutstanding] = useState({ totalRupees: '0.00', count: 0 });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [attRes, classRes] = await Promise.all([
+        const [attRes, classRes, duesRes] = await Promise.all([
           attendanceApi.getReport().catch(() => null),
-          timetableApi.getNextClass().catch(() => null)
+          timetableApi.getNextClass().catch(() => null),
+          paymentsApi.getOutstanding().catch(() => null),
         ]);
         setAttendance(attRes);
         setNextClass(classRes);
+        if (duesRes) setOutstanding(duesRes);
       } catch (err) {
         console.error(err);
       } finally {
@@ -163,7 +167,7 @@ export default function HomeScreen() {
           </View>
           <Text className="text-white font-bold">Apply Leave</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => navigation.navigate('ChatInbox')}
           className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
         >
@@ -172,7 +176,27 @@ export default function HomeScreen() {
           </View>
           <Text className="text-white font-bold">Messages</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        {/* Clear Dues — shown with outstanding balance if any */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('MyDues')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+          style={outstanding.count > 0 ? { borderColor: '#ef444466' } : {}}
+        >
+          <View className="w-12 h-12 rounded-full items-center justify-center mb-3"
+            style={{ backgroundColor: outstanding.count > 0 ? '#ef444422' : '#22c55e22' }}
+          >
+            <Ionicons
+              name="cash-outline"
+              size={24}
+              color={outstanding.count > 0 ? '#ef4444' : '#22c55e'}
+            />
+          </View>
+          <Text className="text-white font-bold">Clear Dues</Text>
+          {outstanding.count > 0 && (
+            <Text className="text-error text-xs font-bold mt-0.5">₹{outstanding.totalRupees} due</Text>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={() => navigation.navigate('GlobalEventCalendar')}
           className="w-full bg-card p-4 rounded-2xl border border-border mb-4 items-center"
         >

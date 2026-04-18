@@ -10,6 +10,7 @@ import NoticesScreen from '../screens/student/NoticesScreen';
 import CreateNoticeScreen from '../screens/faculty/CreateNoticeScreen';
 import ClubsScreen from '../screens/student/ClubsScreen';
 import AdvisingScreen from '../screens/faculty/AdvisingScreen'; // Reuse faculty screen for HOD view
+import RaiseDueScreen from '../screens/admin/RaiseDueScreen';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export default function AdminStack() {
       <Stack.Screen name="CreateNotice" component={CreateNoticeScreen} />
       <Stack.Screen name="Clubs" component={ClubsScreen} />
       <Stack.Screen name="Advising" component={AdvisingScreen} />
+      <Stack.Screen name="RaiseDue" component={RaiseDueScreen} />
     </Stack.Navigator>
   );
 }

@@ -12,6 +12,10 @@ import StudentAdvisingScreen from '../screens/student/StudentAdvisingScreen';
 import LeaveApplicationScreen from '../screens/student/LeaveApplicationScreen';
 import ChatInboxScreen from '../screens/student/ChatInboxScreen';
 import GlobalEventCalendarScreen from '../screens/student/GlobalEventCalendarScreen';
+import MiniAppMarketplaceScreen from '../screens/student/MiniAppMarketplaceScreen';
+import MiniAppShellScreen from '../screens/student/MiniAppShellScreen';
+import MyDuesScreen from '../screens/student/MyDuesScreen';
+import MiniAppDeveloperPortalScreen from '../screens/student/MiniAppDeveloperPortalScreen';
 
 const Stack = createStackNavigator();
 
@@ -34,6 +38,10 @@ export default function StudentStack() {
       <Stack.Screen name="LeaveApplication" component={LeaveApplicationScreen} />
       <Stack.Screen name="ChatInbox" component={ChatInboxScreen} />
       <Stack.Screen name="GlobalEventCalendar" component={GlobalEventCalendarScreen} />
+      <Stack.Screen name="MiniAppMarketplace" component={MiniAppMarketplaceScreen} />
+      <Stack.Screen name="MiniAppShell" component={MiniAppShellScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="MiniAppDeveloperPortal" component={MiniAppDeveloperPortalScreen} options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="MyDues" component={MyDuesScreen} />
     </Stack.Navigator>
   );
 }
