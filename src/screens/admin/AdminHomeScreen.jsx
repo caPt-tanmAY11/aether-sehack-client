@@ -81,7 +81,7 @@ export default function AdminHomeScreen() {
 
       <Text className="text-white text-lg font-bold mb-4">Action Queue</Text>
       
-      {(role === 'council' || role === 'dean' || role === 'superadmin') && (
+      {(role === 'council' || role === 'hod' || role === 'dean' || role === 'superadmin') && (
         <TouchableOpacity 
           onPress={() => navigation.navigate('EventApprovals')}
           className="bg-card p-4 rounded-2xl border border-border mb-4 flex-row items-center justify-between"

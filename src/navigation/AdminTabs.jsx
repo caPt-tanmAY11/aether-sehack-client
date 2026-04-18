@@ -3,6 +3,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
 import AnalyticsDashboardScreen from '../screens/admin/AnalyticsDashboardScreen';
+import EventApprovalsScreen from '../screens/admin/EventApprovalsScreen';
+import NotificationsScreen from '../screens/student/NotificationsScreen';
 import ProfileScreen from '../screens/student/ProfileScreen'; // Reusing profile screen
 import { useAuthStore } from '../store/auth.store';
 
@@ -19,8 +21,8 @@ export default function AdminTabs() {
 
           if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
           else if (route.name === 'Analytics') iconName = focused ? 'bar-chart' : 'bar-chart-outline';
-          else if (route.name === 'Notices') iconName = focused ? 'megaphone' : 'megaphone-outline';
           else if (route.name === 'Approvals') iconName = focused ? 'checkmark-circle' : 'checkmark-circle-outline';
+          else if (route.name === 'Notifications') iconName = focused ? 'notifications' : 'notifications-outline';
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -43,7 +45,10 @@ export default function AdminTabs() {
       {(role === 'hod' || role === 'dean' || role === 'superadmin') && (
         <Tab.Screen name="Analytics" component={AnalyticsDashboardScreen} />
       )}
-      <Tab.Screen name="Notices" component={require('../screens/student/NoticesScreen').default} />
+      {(role === 'council' || role === 'hod' || role === 'dean' || role === 'superadmin') && (
+        <Tab.Screen name="Approvals" component={EventApprovalsScreen} options={{ title: 'Event Approvals' }} />
+      )}
+      <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

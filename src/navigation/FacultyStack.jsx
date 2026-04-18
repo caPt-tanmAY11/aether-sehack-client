@@ -12,6 +12,8 @@ import LeaveScreen from '../screens/faculty/LeaveScreen';
 import BatchesScreen from '../screens/faculty/BatchesScreen';
 import FacultyChatScreen from '../screens/faculty/FacultyChatScreen';
 import StudentLeavesScreen from '../screens/faculty/StudentLeavesScreen';
+import FacultyTimetableStatusScreen from '../screens/faculty/FacultyTimetableStatusScreen';
+import NotificationsScreen from '../screens/student/NotificationsScreen';
 
 const Stack = createStackNavigator();
 
@@ -30,6 +32,8 @@ export default function FacultyStack() {
       <Stack.Screen name="Batches" component={BatchesScreen} />
       <Stack.Screen name="FacultyChat" component={FacultyChatScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="StudentLeaves" component={StudentLeavesScreen} />
+      <Stack.Screen name="TimetableStatus" component={FacultyTimetableStatusScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
     </Stack.Navigator>
   );
 }

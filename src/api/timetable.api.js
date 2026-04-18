@@ -41,5 +41,11 @@ export const timetableApi = {
   getNextClass: async () => {
     const res = await apiClient.get('/timetable/next-class');
     return res.data.data;
-  }
+  },
+
+  // Faculty: get all their own submitted timetables with HOD feedback
+  getMySubmissions: async () => {
+    const res = await apiClient.get('/timetable/my-submissions');
+    return res.data.data;
+  },
 };

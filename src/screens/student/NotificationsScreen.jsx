@@ -76,7 +76,8 @@ export default function NotificationsScreen({ navigation }) {
           >
             <View className={`w-2 h-2 rounded-full mt-2 mr-3 ${n.read ? 'bg-transparent' : 'bg-primary'}`} />
             <View className="flex-1">
-              <Text className={`${n.read ? 'text-slate-300' : 'text-white'} font-bold mb-1`}>{n.message}</Text>
+              <Text className={`${n.read ? 'text-slate-300' : 'text-white'} font-bold mb-1`}>{n.title}</Text>
+              {n.body ? <Text className="text-slate-400 text-sm mb-1">{n.body}</Text> : null}
               <Text className="text-muted text-xs">{new Date(n.createdAt).toLocaleString()}</Text>
             </View>
           </TouchableOpacity>

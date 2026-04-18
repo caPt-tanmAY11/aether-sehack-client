@@ -86,6 +86,24 @@ export default function FacultyHomeScreen() {
           </View>
           <Text className="text-white font-bold text-center">Advising Requests</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('TimetableStatus')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-warning/20 items-center justify-center mb-3">
+            <Ionicons name="hourglass-outline" size={24} color="#f59e0b" />
+          </View>
+          <Text className="text-white font-bold text-center">Timetable Status</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Notifications')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-indigo-500/20 items-center justify-center mb-3">
+            <Ionicons name="notifications-outline" size={24} color="#818cf8" />
+          </View>
+          <Text className="text-white font-bold text-center">Notifications</Text>
+        </TouchableOpacity>
       </View>
       
       <Text className="text-white text-lg font-bold mb-4 mt-2">Today's Next Class</Text>
