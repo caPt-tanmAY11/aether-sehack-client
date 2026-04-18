@@ -1,0 +1,29 @@
+import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { useAuthStore } from '../store/auth.store';
+import LoginScreen from '../screens/auth/LoginScreen';
+import StudentStack from './StudentStack';
+import FacultyStack from './FacultyStack';
+import AdminStack from './AdminStack';
+import { useSocket } from '../hooks/useSocket';
+
+export default function RootNavigator() {
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const role = useAuthStore(state => state.role);
+  
+  // Initialize socket connection if authenticated
+  useSocket();
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  // Role based routing
+  if (role === 'student') return <StudentStack />;
+  if (role === 'faculty') return <FacultyStack />;
+  
+  // Council, HOD, Dean, Superadmin
+  if (['council', 'hod', 'dean', 'superadmin'].includes(role)) return <AdminStack />;
+  
+  return <LoginScreen />; // Fallback
+}
