@@ -18,6 +18,7 @@ export default function EventSubmissionScreen() {
   const [pickerMode, setPickerMode] = useState('date');
   const [activeField, setActiveField] = useState('start');
 
+  const [templateType, setTemplateType] = useState('plain');
   const [expectedAttendance, setExpectedAttendance] = useState('100');
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
@@ -44,7 +45,8 @@ export default function EventSubmissionScreen() {
         venue,
         startTime: start.toISOString(),
         endTime: end.toISOString(),
-        expectedAttendance: Number(expectedAttendance)
+        expectedAttendance: Number(expectedAttendance),
+        templateType
       });
       Alert.alert('Success', 'Event submitted to Council for review!');
       navigation.goBack();
@@ -65,6 +67,26 @@ export default function EventSubmissionScreen() {
       </View>
 
       <View className="bg-card p-4 rounded-2xl border border-border mb-4">
+        <Text className="text-white text-lg font-bold mb-4">Select Event Template</Text>
+        <View className="flex-row gap-2 mb-2">
+          {['plain', 'case_study', 'hackathon'].map(type => (
+            <TouchableOpacity 
+              key={type}
+              onPress={() => setTemplateType(type)}
+              className={`flex-1 p-3 rounded-xl border ${templateType === type ? 'bg-primary border-primary' : 'bg-surface border-border'} items-center`}
+            >
+              <Text className={`text-sm font-bold ${templateType === type ? 'text-white' : 'text-muted'}`}>
+                {type === 'plain' ? 'Plain Event' : type === 'case_study' ? 'Case Study' : 'Hackathon'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text className="text-indigo-200 text-xs italic mb-4">
+          {templateType === 'hackathon' && 'Includes: IT Lab permissions, Security Guard CC, AC, Wi-Fi, Smart Board'}
+          {templateType === 'case_study' && 'Includes: 4 Classrooms, Dept Office, AC, Wi-Fi, Smart Board'}
+          {templateType === 'plain' && 'Includes: 1 Classroom, AC, Wi-Fi, Smart Board'}
+        </Text>
+
         <Text className="text-muted text-sm font-bold mb-2">Event Title</Text>
         <TextInput
           className="bg-surface text-white p-3 rounded-xl border border-border mb-4"

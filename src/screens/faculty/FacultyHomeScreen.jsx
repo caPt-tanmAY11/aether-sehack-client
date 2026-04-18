@@ -23,6 +23,17 @@ export default function FacultyHomeScreen() {
 
       <Text className="text-white text-lg font-bold mb-4">Quick Actions</Text>
       <View className="flex-row flex-wrap justify-between">
+        {['council', 'hod', 'dean'].includes(user?.role) && (
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('EventApprovals')}
+            className="w-[48%] bg-card p-4 rounded-2xl border border-warning mb-4 items-center"
+          >
+            <View className="w-12 h-12 rounded-full bg-warning/20 items-center justify-center mb-3">
+              <Ionicons name="checkmark-done-circle" size={24} color="#f59e0b" />
+            </View>
+            <Text className="text-warning font-bold text-center">Event Approvals</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity 
           onPress={() => navigation.navigate('TimetableUpload')}
           className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
@@ -112,6 +123,21 @@ export default function FacultyHomeScreen() {
             <Ionicons name="cash-outline" size={24} color="#ef4444" />
           </View>
           <Text className="text-white font-bold text-center">Issue Fine/Bill</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="bg-card p-4 rounded-2xl border border-border flex-row items-center justify-between w-full mt-2"
+          onPress={() => navigation.navigate('FacultyCoordination')}
+        >
+          <View className="flex-row items-center">
+            <View className="w-12 h-12 bg-primary/20 rounded-full items-center justify-center mr-4">
+              <Ionicons name="chatbubbles" size={24} color="#6366f1" />
+            </View>
+            <View>
+              <Text className="text-white font-bold text-lg">Coordination Hub</Text>
+              <Text className="text-muted text-xs">Real-time faculty discussions</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#64748b" />
         </TouchableOpacity>
       </View>
       

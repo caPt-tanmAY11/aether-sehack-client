@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { leaveApi } from '../../api/leave.api';
+import { handleViewPdf } from '../../utils/pdf';
 
 export default function LeaveApprovalsScreen({ navigation }) {
   const [requests, setRequests] = useState([]);
@@ -59,7 +60,14 @@ export default function LeaveApprovalsScreen({ navigation }) {
         ) : (
           requests.map(req => (
             <View key={req._id} className="bg-card p-4 rounded-2xl border border-border mb-4">
-              <Text className="text-white text-lg font-bold mb-1">{req.facultyId?.name}</Text>
+              <View className="flex-row justify-between items-center mb-1">
+                <Text className="text-white text-lg font-bold flex-1">{req.facultyId?.name}</Text>
+                <TouchableOpacity onPress={() => {
+                  handleViewPdf(`/leave/faculty/${req._id}/pdf`, `Faculty_Leave_${req._id}`).catch(err => Alert.alert('Error', err.message));
+                }} className="p-2 bg-surface rounded-full border border-border ml-2">
+                  <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+                </TouchableOpacity>
+              </View>
               <Text className="text-primary font-bold capitalize mb-3">{req.leaveType} Leave</Text>
               
               <Text className="text-muted text-xs mb-1">Duration</Text>

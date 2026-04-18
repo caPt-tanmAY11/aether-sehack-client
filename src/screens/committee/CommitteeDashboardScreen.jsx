@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { apiClient } from '../../api/client';
 import { useNavigation } from '@react-navigation/native';
 import CalendarView from '../../components/CalendarView';
+import { handleViewPdf } from '../../utils/pdf';
 
 export default function CommitteeDashboardScreen() {
   const user = useAuthStore(state => state.user);
@@ -74,6 +75,14 @@ export default function CommitteeDashboardScreen() {
       fetchData();
     } catch (err) {
       Alert.alert('Error', err?.response?.data?.message || 'Failed to review request');
+    }
+  };
+
+  const viewPdf = async (eventId) => {
+    try {
+      await handleViewPdf(`/events/${eventId}/pdf`, `Event_Request_${eventId}`);
+    } catch (err) {
+      Alert.alert('Error', err.message);
     }
   };
 
@@ -210,8 +219,12 @@ export default function CommitteeDashboardScreen() {
                   <Text className="text-muted text-xs mt-0.5">
                     {new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(event.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </Text>
+                  <Text className="text-indigo-300 text-xs mt-0.5 font-bold">{event.templateType ? event.templateType.toUpperCase() : 'PLAIN'} TEMPLATE</Text>
                   {isPending && <Text className="text-warning text-xs font-bold mt-1">Pending ({event.currentStage})</Text>}
                 </View>
+                <TouchableOpacity onPress={() => viewPdf(event._id)} className="p-2 bg-surface rounded-full border border-border ml-2">
+                  <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+                </TouchableOpacity>
               </View>
             );
           })}

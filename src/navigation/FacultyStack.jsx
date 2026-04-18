@@ -5,6 +5,8 @@ import TimetableUploadScreen from '../screens/faculty/TimetableUploadScreen';
 import AttendanceOverrideScreen from '../screens/faculty/AttendanceOverrideScreen';
 import AttendanceViewerScreen from '../screens/faculty/AttendanceViewerScreen';
 import SyllabusUpdateScreen from '../screens/faculty/SyllabusUpdateScreen';
+import FacultyCoordinationScreen from '../screens/faculty/FacultyCoordinationScreen';
+import CoordinationChatScreen from '../screens/faculty/CoordinationChatScreen';
 import NoticesScreen from '../screens/student/NoticesScreen';
 import CreateNoticeScreen from '../screens/faculty/CreateNoticeScreen';
 import AdvisingScreen from '../screens/faculty/AdvisingScreen';
@@ -15,6 +17,8 @@ import StudentLeavesScreen from '../screens/faculty/StudentLeavesScreen';
 import FacultyTimetableStatusScreen from '../screens/faculty/FacultyTimetableStatusScreen';
 import RaiseDueScreen from '../screens/admin/RaiseDueScreen';
 import NotificationsScreen from '../screens/student/NotificationsScreen';
+import EventApprovalsScreen from '../screens/admin/EventApprovalsScreen';
+import LeaveApprovalsScreen from '../screens/admin/LeaveApprovalsScreen';
 
 const Stack = createStackNavigator();
 
@@ -36,6 +40,10 @@ export default function FacultyStack() {
       <Stack.Screen name="TimetableStatus" component={FacultyTimetableStatusScreen} />
       <Stack.Screen name="RaiseDue" component={RaiseDueScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="EventApprovals" component={EventApprovalsScreen} />
+      <Stack.Screen name="LeaveApprovals" component={LeaveApprovalsScreen} />
+      <Stack.Screen name="FacultyCoordination" component={FacultyCoordinationScreen} />
+      <Stack.Screen name="CoordinationChat" component={CoordinationChatScreen} />
     </Stack.Navigator>
   );
 }

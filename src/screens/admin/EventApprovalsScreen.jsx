@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } fr
 import { eventsApi } from '../../api/events.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { handleViewPdf } from '../../utils/pdf';
 
 export default function EventApprovalsScreen() {
   const [events, setEvents] = useState([]);
@@ -60,8 +61,15 @@ export default function EventApprovalsScreen() {
                 <Text className="text-white font-bold text-lg">{ev.title}</Text>
                 <Text className="text-muted text-sm">{ev.requestedBy?.name || 'Unknown'} • {new Date(ev.startTime).toLocaleDateString()}</Text>
               </View>
-              <View className="bg-warning/20 px-2 py-1 rounded-md border border-warning/50">
-                <Text className="text-warning text-xs font-bold capitalize">{ev.currentStage} Stage</Text>
+              <View className="flex-row items-center">
+                <View className="bg-warning/20 px-2 py-1 rounded-md border border-warning/50 mr-2">
+                  <Text className="text-warning text-xs font-bold capitalize">{ev.currentStage} Stage</Text>
+                </View>
+                <TouchableOpacity onPress={() => {
+                  handleViewPdf(`/events/${ev._id}/pdf`, `Event_Request_${ev._id}`).catch(err => Alert.alert('Error', err.message));
+                }} className="p-2 bg-surface rounded-full border border-border">
+                  <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+                </TouchableOpacity>
               </View>
             </View>
             <Text className="text-slate-300 text-sm mb-4">{ev.description}</Text>

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../api/client';
 import { useNavigation } from '@react-navigation/native';
 import CalendarView from '../../components/CalendarView';
+import { handleViewPdf } from '../../utils/pdf';
 
 export default function GlobalEventCalendarScreen() {
   const navigation = useNavigation();
@@ -36,6 +37,14 @@ export default function GlobalEventCalendarScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     fetchEvents();
+  };
+
+  const viewPdf = async (eventId) => {
+    try {
+      await handleViewPdf(`/events/${eventId}/pdf`, `Event_Request_${eventId}`);
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   if (loading) {
@@ -104,8 +113,12 @@ export default function GlobalEventCalendarScreen() {
                 <View className="flex-1">
                   <Text className="text-white text-base font-bold">{event.title}</Text>
                   <Text className="text-muted text-xs mt-0.5">{startTime} - {endTime} • {event.venue}</Text>
+                  <Text className="text-indigo-300 text-xs mt-0.5 font-bold">{event.templateType ? event.templateType.toUpperCase() : 'PLAIN'} TEMPLATE</Text>
                   {isPending && <Text className="text-warning text-xs font-bold mt-1">Pending Approval ({event.currentStage})</Text>}
                 </View>
+                <TouchableOpacity onPress={() => viewPdf(event._id)} className="p-2 bg-surface rounded-full border border-border ml-2">
+                  <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+                </TouchableOpacity>
               </View>
             );
           })

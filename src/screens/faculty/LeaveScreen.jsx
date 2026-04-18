@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { leaveApi } from '../../api/leave.api';
+import { handleViewPdf } from '../../utils/pdf';
 
 export default function LeaveScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('history'); // 'history' or 'apply'
@@ -79,11 +80,18 @@ export default function LeaveScreen({ navigation }) {
           ) : (
             leaves.map(leave => (
               <View key={leave._id} className="bg-card p-4 rounded-2xl border border-border mb-4">
-                <View className="flex-row justify-between mb-2">
-                  <Text className="text-white text-lg font-bold capitalize flex-1">{leave.leaveType} Leave</Text>
-                  <View className={`px-2 py-1 rounded-md border ${leave.status === 'approved' ? 'bg-success/20 border-success/50' : leave.status === 'rejected' ? 'bg-error/20 border-error/50' : 'bg-warning/20 border-warning/50'}`}>
-                    <Text className={`${leave.status === 'approved' ? 'text-success' : leave.status === 'rejected' ? 'text-error' : 'text-warning'} text-xs font-bold capitalize`}>{leave.status}</Text>
+                <View className="flex-row justify-between mb-2 items-center">
+                  <View className="flex-1">
+                    <Text className="text-white text-lg font-bold capitalize">{leave.leaveType} Leave</Text>
+                    <View className={`px-2 py-1 rounded-md border mt-1 self-start ${leave.status === 'approved' ? 'bg-success/20 border-success/50' : leave.status === 'rejected' ? 'bg-error/20 border-error/50' : 'bg-warning/20 border-warning/50'}`}>
+                      <Text className={`${leave.status === 'approved' ? 'text-success' : leave.status === 'rejected' ? 'text-error' : 'text-warning'} text-xs font-bold capitalize`}>{leave.status}</Text>
+                    </View>
                   </View>
+                  <TouchableOpacity onPress={() => {
+                    handleViewPdf(`/leave/faculty/${leave._id}/pdf`, `Faculty_Leave_${leave._id}`).catch(err => Alert.alert('Error', err.message));
+                  }} className="p-2 bg-surface rounded-full border border-border ml-2">
+                    <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+                  </TouchableOpacity>
                 </View>
                 <Text className="text-muted text-xs mb-3">
                   {new Date(leave.fromDate).toLocaleDateString()} to {new Date(leave.toDate).toLocaleDateString()}

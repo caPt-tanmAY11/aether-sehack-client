@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Mod
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { leaveApi } from '../../api/leave.api';
+import { handleViewPdf } from '../../utils/pdf';
 
 export default function StudentLeavesScreen() {
   const navigation = useNavigation();
@@ -62,11 +63,18 @@ export default function StudentLeavesScreen() {
       ) : (
         leaves.map((lv, i) => (
           <View key={i} className="bg-card p-4 rounded-2xl border border-border mb-4">
-            <View className="flex-row justify-between mb-2">
-              <Text className="text-white font-bold">{lv.studentId?.name}</Text>
-              <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: `${STATUS_COLORS[lv.status]}20` }}>
-                <Text className="text-xs font-bold uppercase" style={{ color: STATUS_COLORS[lv.status] }}>{lv.status}</Text>
+            <View className="flex-row justify-between mb-2 items-center">
+              <View className="flex-1">
+                <Text className="text-white font-bold">{lv.studentId?.name}</Text>
+                <View className="px-2 py-0.5 rounded-full mt-1 self-start" style={{ backgroundColor: `${STATUS_COLORS[lv.status]}20` }}>
+                  <Text className="text-xs font-bold uppercase" style={{ color: STATUS_COLORS[lv.status] }}>{lv.status}</Text>
+                </View>
               </View>
+              <TouchableOpacity onPress={() => {
+                handleViewPdf(`/leave/student/${lv._id}/pdf`, `Student_Leave_${lv._id}`).catch(err => Alert.alert('Error', err.message));
+              }} className="p-2 bg-surface rounded-full border border-border ml-2">
+                <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+              </TouchableOpacity>
             </View>
             <Text className="text-muted text-xs mb-1">{lv.studentId?.enrollmentNo} · Div {lv.studentId?.division} · Sem {lv.studentId?.semester}</Text>
             <Text className="text-slate-300 text-sm mb-2">{lv.reason}</Text>

@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { leaveApi } from '../../api/leave.api';
 import { apiClient } from '../../api/client';
 import CalendarPicker from '../../components/CalendarPicker';
+import { handleViewPdf } from '../../utils/pdf';
 
 const LEAVE_TYPES = ['medical', 'personal', 'family', 'other'];
 
@@ -144,11 +145,18 @@ export default function LeaveApplicationScreen() {
       ) : (
         myLeaves.map((lv, i) => (
           <View key={i} className="bg-card p-4 rounded-2xl border border-border mb-4">
-            <View className="flex-row justify-between mb-1">
-              <Text className="text-white font-bold capitalize">{lv.leaveType} Leave</Text>
-              <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: `${STATUS_COLOR[lv.status]}20` }}>
-                <Text className="text-xs font-bold uppercase" style={{ color: STATUS_COLOR[lv.status] }}>{lv.status}</Text>
+            <View className="flex-row justify-between mb-1 items-center">
+              <View className="flex-1">
+                <Text className="text-white font-bold capitalize">{lv.leaveType} Leave</Text>
+                <View className="px-2 py-0.5 rounded-full mt-1 self-start" style={{ backgroundColor: `${STATUS_COLOR[lv.status]}20` }}>
+                  <Text className="text-xs font-bold uppercase" style={{ color: STATUS_COLOR[lv.status] }}>{lv.status}</Text>
+                </View>
               </View>
+              <TouchableOpacity onPress={() => {
+                handleViewPdf(`/leave/student/${lv._id}/pdf`, `Student_Leave_${lv._id}`).catch(err => Alert.alert('Error', err.message));
+              }} className="p-2 bg-surface rounded-full border border-border ml-2">
+                <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+              </TouchableOpacity>
             </View>
             <Text className="text-muted text-xs mb-1">To: {lv.facultyId?.name}</Text>
             <Text className="text-slate-300 text-sm mb-2">{lv.reason}</Text>
