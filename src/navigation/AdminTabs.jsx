@@ -19,6 +19,7 @@ export default function AdminTabs() {
 
           if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
           else if (route.name === 'Analytics') iconName = focused ? 'bar-chart' : 'bar-chart-outline';
+          else if (route.name === 'Notices') iconName = focused ? 'megaphone' : 'megaphone-outline';
           else if (route.name === 'Approvals') iconName = focused ? 'checkmark-circle' : 'checkmark-circle-outline';
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
 
@@ -42,6 +43,7 @@ export default function AdminTabs() {
       {(role === 'hod' || role === 'dean' || role === 'superadmin') && (
         <Tab.Screen name="Analytics" component={AnalyticsDashboardScreen} />
       )}
+      <Tab.Screen name="Notices" component={require('../screens/student/NoticesScreen').default} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

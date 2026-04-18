@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '../../store/auth.store';
+import { analyticsApi } from '../../api/analytics.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -10,6 +11,28 @@ export default function AdminHomeScreen() {
   const subRole = useAuthStore(state => state.subRole);
   const logout = useAuthStore(state => state.logout);
   const navigation = useNavigation();
+
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const res = (role === 'dean' || role === 'superadmin') ? await analyticsApi.getDeanDashboard() : await analyticsApi.getHodDashboard();
+        setStats(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (role === 'dean' || role === 'hod' || role === 'superadmin') {
+      fetchStats();
+    } else {
+      setLoading(false);
+    }
+  }, [role]);
 
   return (
     <ScrollView className="flex-1 bg-surface px-4 py-6">
@@ -26,12 +49,16 @@ export default function AdminHomeScreen() {
       <View className="flex-row flex-wrap justify-between mb-6">
         <View className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4">
           <Ionicons name="people" size={28} color="#6366f1" className="mb-2" />
-          <Text className="text-white text-2xl font-bold mb-1">1,240</Text>
+          {loading ? <ActivityIndicator size="small" color="#6366f1" /> : (
+            <Text className="text-white text-2xl font-bold mb-1">{stats?.deanReport?.totalStudents || stats?.departmentSize || 0}</Text>
+          )}
           <Text className="text-muted text-sm">Active Students</Text>
         </View>
         <View className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4">
           <Ionicons name="document-text" size={28} color="#22c55e" className="mb-2" />
-          <Text className="text-white text-2xl font-bold mb-1">84%</Text>
+          {loading ? <ActivityIndicator size="small" color="#22c55e" /> : (
+            <Text className="text-white text-2xl font-bold mb-1">{stats?.attendance?.avgAttendancePercent ?? 0}%</Text>
+          )}
           <Text className="text-muted text-sm">Avg Attendance</Text>
         </View>
         
@@ -84,6 +111,24 @@ export default function AdminHomeScreen() {
             <View>
               <Text className="text-white font-bold text-lg">Timetable Review</Text>
               <Text className="text-muted text-sm">Review drafts</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#64748b" />
+        </TouchableOpacity>
+      )}
+
+      {(role === 'hod') && (
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('LeaveApprovals')}
+          className="bg-card p-4 rounded-2xl border border-border mb-4 flex-row items-center justify-between"
+        >
+          <View className="flex-row items-center">
+            <View className="w-10 h-10 rounded-full bg-warning/20 items-center justify-center mr-3">
+              <Ionicons name="time" size={20} color="#f59e0b" />
+            </View>
+            <View>
+              <Text className="text-white font-bold text-lg">Leave Approvals</Text>
+              <Text className="text-muted text-sm">Review faculty requests</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#64748b" />

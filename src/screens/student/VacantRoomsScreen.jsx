@@ -58,7 +58,7 @@ export default function VacantRoomsScreen({ navigation }) {
             {rooms.map((room) => (
               <View key={room._id} className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center">
                 <View className="w-12 h-12 rounded-full bg-success/20 items-center justify-center mb-3">
-                  <Ionicons name="door-open" size={24} color="#22c55e" />
+                  <Ionicons name="enter-outline" size={24} color="#22c55e" />
                 </View>
                 <Text className="text-white text-lg font-bold mb-1">{room.name}</Text>
                 <Text className="text-muted text-xs text-center">{room.building} - Flr {room.floor}</Text>

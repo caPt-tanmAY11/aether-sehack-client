@@ -5,7 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function WeekView({ timetable }) {
-  const [selectedDay, setSelectedDay] = useState('Monday');
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+    return DAYS.includes(today) ? today : 'Monday';
+  });
 
   if (!timetable || !timetable.slots) {
     return (

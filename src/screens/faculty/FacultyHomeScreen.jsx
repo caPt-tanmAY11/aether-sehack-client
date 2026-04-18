@@ -50,14 +50,16 @@ export default function FacultyHomeScreen() {
         </TouchableOpacity>
       </View>
       
-      <Text className="text-white text-lg font-bold mb-4 mt-2">Today's Schedule</Text>
-      <View className="bg-card p-4 rounded-2xl border border-border mb-4 flex-row items-center justify-between">
+      <Text className="text-white text-lg font-bold mb-4 mt-2">Today's Next Class</Text>
+      <View className="bg-primary/20 p-4 rounded-2xl border border-primary mb-6 flex-row items-center justify-between">
         <View>
-          <Text className="text-white text-lg font-bold mb-1">09:00 - 10:00</Text>
-          <Text className="text-primary font-bold">Advanced Algorithms</Text>
-          <Text className="text-muted text-sm mt-1">SE COMPS B • Room 204</Text>
+          <Text className="text-primary font-bold text-sm mb-1 uppercase tracking-wider">Upcoming</Text>
+          <Text className="text-white text-lg font-bold mb-1">Check full timetable</Text>
+          <Text className="text-slate-300 text-sm mt-1">Navigate to Timetable view to see classes.</Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#64748b" />
+        <View className="w-12 h-12 bg-primary rounded-full items-center justify-center">
+          <Ionicons name="time" size={24} color="white" />
+        </View>
       </View>
     </ScrollView>
   );

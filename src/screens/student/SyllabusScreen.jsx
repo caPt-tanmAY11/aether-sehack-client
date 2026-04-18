@@ -13,7 +13,7 @@ export default function SyllabusScreen() {
   const fetchSyllabus = async () => {
     try {
       setLoading(true);
-      const data = await syllabusApi.getOverview(3, '2026-2027'); // Hardcoded for prototype
+      const data = await syllabusApi.getMySummary();
       setSyllabusData(data);
     } catch (err) {
       console.error(err);

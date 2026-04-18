@@ -14,7 +14,9 @@ export default function FacultyTabs() {
           let iconName;
 
           if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
-          else if (route.name === 'Schedule') iconName = focused ? 'calendar' : 'calendar-outline';
+          else if (route.name === 'Notices') iconName = focused ? 'megaphone' : 'megaphone-outline';
+          else if (route.name === 'Advising') iconName = focused ? 'people' : 'people-outline';
+          else if (route.name === 'Leave') iconName = focused ? 'calendar' : 'calendar-outline';
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -34,6 +36,9 @@ export default function FacultyTabs() {
       })}
     >
       <Tab.Screen name="Home" component={FacultyHomeScreen} options={{ title: 'Faculty Portal' }} />
+      <Tab.Screen name="Notices" component={require('../screens/student/NoticesScreen').default} />
+      <Tab.Screen name="Advising" component={require('../screens/faculty/AdvisingScreen').default} />
+      <Tab.Screen name="Leave" component={require('../screens/faculty/LeaveScreen').default} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

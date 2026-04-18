@@ -23,8 +23,16 @@ export default function ProfileScreen() {
           <Text className="text-white capitalize flex-1">{user?.role} {user?.subRole ? `(${user?.subRole})` : ''}</Text>
         </View>
         <View className="flex-row py-3 border-b border-border">
+          <Text className="text-muted w-24">Department</Text>
+          <Text className="text-white flex-1">{user?.departmentId?.name || 'N/A'}</Text>
+        </View>
+        <View className="flex-row py-3 border-b border-border">
           <Text className="text-muted w-24">Division</Text>
           <Text className="text-white flex-1">{user?.division || 'N/A'}</Text>
+        </View>
+        <View className="flex-row py-3 border-b border-border">
+          <Text className="text-muted w-24">Semester</Text>
+          <Text className="text-white flex-1">{user?.semester || 'N/A'}</Text>
         </View>
         <View className="flex-row py-3">
           <Text className="text-muted w-24">App Version</Text>

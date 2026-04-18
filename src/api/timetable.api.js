@@ -36,5 +36,10 @@ export const timetableApi = {
   getVacantRooms: async () => {
     const response = await apiClient.get('/timetable/vacant');
     return response.data.data;
+  },
+  // Get Next Class
+  getNextClass: async () => {
+    const res = await apiClient.get('/timetable/next-class');
+    return res.data.data;
   }
 };

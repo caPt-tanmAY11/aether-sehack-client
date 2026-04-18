@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuthStore } from '../store/auth.store';
+import { useNotificationsStore } from '../store/notifications.store';
 import { Alert } from 'react-native';
 
 export function useSocket() {
@@ -13,7 +14,7 @@ export function useSocket() {
     if (isAuthenticated && accessToken) {
       const baseUrl = process.env.EXPO_PUBLIC_API_URL 
         ? process.env.EXPO_PUBLIC_API_URL.replace('/api', '') 
-        : 'http://10.10.120.239:4000';
+        : 'http://10.10.120.29:4000';
         
       socketRef.current = io(baseUrl, {
         auth: { token: accessToken }
@@ -27,8 +28,14 @@ export function useSocket() {
       });
 
       socketRef.current.on('notification', (data) => {
-        // Here we could update a global notifications store
-        // For now, just show an in-app alert/toast if it's high priority
+        // Update global store
+        useNotificationsStore.getState().prependNotification({
+          _id: Math.random().toString(), // temp id until refreshed
+          message: data.message,
+          type: data.type,
+          read: false,
+          createdAt: new Date().toISOString()
+        });
         Alert.alert('New Notification', data.message || 'You have a new update.');
       });
 

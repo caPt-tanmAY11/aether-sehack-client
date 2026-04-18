@@ -11,6 +11,25 @@ export default function ChatbotScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const scrollViewRef = useRef();
 
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const history = await chatbotApi.getHistory();
+        if (history && history.length > 0) {
+          const formatted = [];
+          history.forEach(log => {
+            formatted.push({ role: 'user', content: log.query });
+            formatted.push({ role: 'assistant', content: log.response, classification: log.classification });
+          });
+          setMessages(formatted);
+        }
+      } catch (err) {
+        console.error('Failed to load chat history', err);
+      }
+    };
+    loadHistory();
+  }, []);
+
   const handleSend = async () => {
     if (!input.trim()) return;
     

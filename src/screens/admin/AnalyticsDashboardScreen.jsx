@@ -60,9 +60,29 @@ export default function AnalyticsDashboardScreen() {
         {data.issues ? renderProgressBar('Issue Resolution Rate', Math.round((data.issues.resolved / (data.issues.total || 1)) * 100), 'bg-warning') : null}
       </View>
 
-      <Text className="text-white text-lg font-bold mb-4">Detailed Reports (JSON Dump)</Text>
+      <Text className="text-white text-lg font-bold mb-4">Detailed Reports</Text>
       <View className="bg-card p-4 rounded-2xl border border-border mb-8">
-        <Text className="text-muted text-xs font-mono">{JSON.stringify(data, null, 2)}</Text>
+        <View className="mb-4 border-b border-border pb-4">
+          <Text className="text-white font-bold mb-2">Event Statistics</Text>
+          <Text className="text-slate-300 text-sm mb-1">Approved: {data.events?.approvedCount || 0}</Text>
+          <Text className="text-slate-300 text-sm mb-1">Pending: {data.events?.pendingCount || 0}</Text>
+          <Text className="text-slate-300 text-sm">Rejected: {data.events?.rejectedCount || 0}</Text>
+        </View>
+
+        <View className="mb-4 border-b border-border pb-4">
+          <Text className="text-white font-bold mb-2">Issue Statistics</Text>
+          <Text className="text-slate-300 text-sm mb-1">Total Issues: {data.issues?.total || 0}</Text>
+          <Text className="text-slate-300 text-sm mb-1">Resolved: {data.issues?.resolved || 0}</Text>
+          <Text className="text-slate-300 text-sm">Pending: {data.issues?.pending || 0}</Text>
+        </View>
+        
+        {role === 'dean' && data.deanReport && (
+          <View className="mb-4">
+            <Text className="text-white font-bold mb-2">College Overview</Text>
+            <Text className="text-slate-300 text-sm mb-1">Total Students: {data.deanReport.totalStudents}</Text>
+            <Text className="text-slate-300 text-sm mb-1">Total Faculty: {data.deanReport.totalFaculty}</Text>
+          </View>
+        )}
       </View>
 
     </ScrollView>

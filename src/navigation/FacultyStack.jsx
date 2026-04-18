@@ -4,6 +4,10 @@ import FacultyTabs from './FacultyTabs';
 import TimetableUploadScreen from '../screens/faculty/TimetableUploadScreen';
 import AttendanceOverrideScreen from '../screens/faculty/AttendanceOverrideScreen';
 import SyllabusUpdateScreen from '../screens/faculty/SyllabusUpdateScreen';
+import NoticesScreen from '../screens/student/NoticesScreen';
+import CreateNoticeScreen from '../screens/faculty/CreateNoticeScreen';
+import AdvisingScreen from '../screens/faculty/AdvisingScreen';
+import LeaveScreen from '../screens/faculty/LeaveScreen';
 
 const Stack = createStackNavigator();
 
@@ -14,6 +18,10 @@ export default function FacultyStack() {
       <Stack.Screen name="TimetableUpload" component={TimetableUploadScreen} />
       <Stack.Screen name="AttendanceOverride" component={AttendanceOverrideScreen} />
       <Stack.Screen name="SyllabusUpdate" component={SyllabusUpdateScreen} />
+      <Stack.Screen name="Notices" component={NoticesScreen} />
+      <Stack.Screen name="CreateNotice" component={CreateNoticeScreen} />
+      <Stack.Screen name="Advising" component={AdvisingScreen} />
+      <Stack.Screen name="Leave" component={LeaveScreen} />
     </Stack.Navigator>
   );
 }

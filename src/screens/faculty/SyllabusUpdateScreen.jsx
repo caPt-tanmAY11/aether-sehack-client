@@ -61,7 +61,13 @@ export default function SyllabusUpdateScreen() {
           
           <TouchableOpacity 
             className="bg-surface p-3 rounded-xl border border-border items-center flex-row justify-center"
-            onPress={() => Alert.alert('Action', 'Mock topic toggle for ID: ' + tracker._id)}
+            onPress={async () => {
+              try {
+                await syllabusApi.updateTopic(tracker._id, { topicIndex: tracker.completedCount, completed: true });
+                Alert.alert('Success', 'Topic marked done');
+                fetchSyllabus();
+              } catch (err) { Alert.alert('Error', 'Failed to update'); }
+            }}
           >
             <Ionicons name="checkmark-circle-outline" size={20} color="#f1f5f9" className="mr-2" />
             <Text className="text-white font-bold ml-2">Mark Next Topic Done</Text>
