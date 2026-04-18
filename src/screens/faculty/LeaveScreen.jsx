@@ -86,7 +86,7 @@ export default function LeaveScreen({ navigation }) {
                   </View>
                 </View>
                 <Text className="text-muted text-xs mb-3">
-                  {new Date(leave.startDate).toLocaleDateString()} to {new Date(leave.endDate).toLocaleDateString()}
+                  {new Date(leave.fromDate).toLocaleDateString()} to {new Date(leave.toDate).toLocaleDateString()}
                 </Text>
                 <Text className="text-slate-300">{leave.reason}</Text>
                 {leave.hodRemarks && (

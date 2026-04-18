@@ -92,14 +92,14 @@ export default function ClubsScreen({ navigation }) {
                 <View className="flex-row justify-between items-center mb-2">
                   <Text className="text-white text-lg font-bold">{club.name}</Text>
                   <View className="bg-primary/20 px-2 py-1 rounded-md border border-primary/30">
-                    <Text className="text-primary text-xs font-bold uppercase">{club.type}</Text>
+                    <Text className="text-primary text-xs font-bold uppercase">{club.category}</Text>
                   </View>
                 </View>
                 <Text className="text-slate-300 mb-4">{club.description}</Text>
                 
                 <View className="flex-row items-center justify-between border-t border-border pt-3 mt-1">
                   <Text className="text-muted text-sm">{club.members?.length || 0} Members</Text>
-                  {!club.members?.some(m => m.studentId === user?._id) ? (
+                  {!club.members?.some(m => m.userId === user?._id || m.userId?._id === user?._id) ? (
                     <TouchableOpacity onPress={() => handleJoin(club._id)} className="bg-success/20 border border-success/30 px-4 py-1.5 rounded-lg">
                       <Text className="text-success font-bold text-sm">Join Club</Text>
                     </TouchableOpacity>

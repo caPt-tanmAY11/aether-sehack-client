@@ -63,7 +63,7 @@ export default function LeaveApprovalsScreen({ navigation }) {
               <Text className="text-primary font-bold capitalize mb-3">{req.leaveType} Leave</Text>
               
               <Text className="text-muted text-xs mb-1">Duration</Text>
-              <Text className="text-slate-300 mb-3">{new Date(req.startDate).toLocaleDateString()} - {new Date(req.endDate).toLocaleDateString()}</Text>
+              <Text className="text-slate-300 mb-3">{new Date(req.fromDate).toLocaleDateString()} – {new Date(req.toDate).toLocaleDateString()} ({req.totalDays || 1} day{req.totalDays > 1 ? 's' : ''})</Text>
               
               <Text className="text-muted text-xs mb-1">Reason</Text>
               <Text className="text-slate-300 mb-4">{req.reason}</Text>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { chatbotApi } from '../../api/chatbot.api';
@@ -40,7 +40,7 @@ export default function ChatbotScreen({ navigation }) {
 
     try {
       const response = await chatbotApi.chat(userMessage.content);
-      const botMessage = { role: 'assistant', content: response.message, classification: response.classification };
+      const botMessage = { role: 'assistant', content: response.response, classification: response.classification };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I am having trouble connecting to the server right now.' }]);

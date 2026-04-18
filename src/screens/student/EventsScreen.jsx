@@ -9,8 +9,10 @@ export default function EventsScreen() {
   const [events, setEvents] = useState([]);
   const [myEvents, setMyEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const role = useAuthStore(state => state.role);
   const subRole = useAuthStore(state => state.subRole);
   const navigation = useNavigation();
+  const canRaiseEvent = role === 'council' || ['committee_head', 'class_rep', 'sports_secretary'].includes(subRole);
 
   useEffect(() => {
     fetchEvents();
@@ -50,7 +52,7 @@ export default function EventsScreen() {
         >
           <Text className={activeTab === 'approved' ? 'text-white font-bold' : 'text-muted font-bold'}>Upcoming</Text>
         </TouchableOpacity>
-        {subRole?.startsWith('committee') && (
+        {canRaiseEvent && (
           <TouchableOpacity 
             onPress={() => setActiveTab('mine')}
             className={`flex-1 py-2 items-center rounded-lg ${activeTab === 'mine' ? 'bg-primary' : 'bg-transparent'}`}
@@ -119,7 +121,7 @@ export default function EventsScreen() {
         <View className="h-20" />
       </ScrollView>
 
-      {subRole?.startsWith('committee') && activeTab === 'approved' && (
+      {canRaiseEvent && activeTab === 'approved' && (
         <TouchableOpacity
           className="absolute bottom-6 right-6 w-14 h-14 bg-primary rounded-full items-center justify-center shadow-lg"
           onPress={() => navigation.navigate('EventSubmission')}

@@ -58,7 +58,7 @@ export default function IssuesResolutionScreen() {
             <View className="flex-row justify-between items-start mb-2">
               <View className="flex-1 mr-2">
                 <Text className="text-white font-bold text-lg">{iss.title}</Text>
-                <Text className="text-muted text-sm">{iss.category} • Loc: {iss.location}</Text>
+                <Text className="text-muted text-sm">{iss.category} • Loc: {iss.locationDesc}</Text>
               </View>
               <View className={`px-2 py-1 rounded-md border ${iss.status === 'open' ? 'bg-error/20 border-error/50' : iss.status === 'in_progress' ? 'bg-warning/20 border-warning/50' : 'bg-success/20 border-success/50'}`}>
                 <Text className={`${iss.status === 'open' ? 'text-error' : iss.status === 'in_progress' ? 'text-warning' : 'text-success'} text-xs font-bold capitalize`}>{iss.status.replace('_', ' ')}</Text>
