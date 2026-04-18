@@ -41,6 +41,21 @@ export default function HomeScreen() {
         <View>
           <Text className="text-muted text-sm uppercase tracking-wider font-bold">Welcome back,</Text>
           <Text className="text-white text-2xl font-bold">{user?.name}</Text>
+          <View className="flex-row items-center mt-1 flex-wrap">
+            {user?.semester ? (
+              <View className="bg-primary/20 border border-primary/40 px-2.5 py-0.5 rounded-full mr-2">
+                <Text className="text-primary text-xs font-bold">Sem {user.semester}</Text>
+              </View>
+            ) : null}
+            {user?.division ? (
+              <View className="bg-card border border-border px-2.5 py-0.5 rounded-full mr-2">
+                <Text className="text-muted text-xs font-bold">Div {user.division}</Text>
+              </View>
+            ) : null}
+            {user?.departmentId?.name ? (
+              <Text className="text-muted text-xs">{user.departmentId.name}</Text>
+            ) : null}
+          </View>
         </View>
         <View className="flex-row">
           <TouchableOpacity 
@@ -94,23 +109,32 @@ export default function HomeScreen() {
 
       <Text className="text-white text-lg font-bold mb-4">Quick Actions</Text>
       <View className="flex-row flex-wrap justify-between">
-        <TouchableOpacity className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center">
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Attendance')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
           <View className="w-12 h-12 rounded-full bg-primary/20 items-center justify-center mb-3">
             <Ionicons name="location" size={24} color="#6366f1" />
           </View>
           <Text className="text-white font-bold">Mark Attendance</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center">
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Issues')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
           <View className="w-12 h-12 rounded-full bg-warning/20 items-center justify-center mb-3">
             <Ionicons name="warning" size={24} color="#f59e0b" />
           </View>
           <Text className="text-white font-bold">Report Issue</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center">
-          <View className="w-12 h-12 rounded-full bg-success/20 items-center justify-center mb-3">
-            <Ionicons name="calendar" size={24} color="#22c55e" />
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Notices')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-indigo-500/20 items-center justify-center mb-3">
+            <Ionicons name="document-text" size={24} color="#818cf8" />
           </View>
-          <Text className="text-white font-bold">Browse Events</Text>
+          <Text className="text-white font-bold">Campus Notices</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={() => navigation.navigate('Chatbot')}
@@ -120,6 +144,42 @@ export default function HomeScreen() {
             <Ionicons name="chatbubbles" size={24} color="#6366f1" />
           </View>
           <Text className="text-white font-bold">Ask Aether AI</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Advising')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-warning/20 items-center justify-center mb-3">
+            <Ionicons name="school-outline" size={24} color="#f59e0b" />
+          </View>
+          <Text className="text-white font-bold">Advising</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('LeaveApplication')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-success/20 items-center justify-center mb-3">
+            <Ionicons name="document-outline" size={24} color="#22c55e" />
+          </View>
+          <Text className="text-white font-bold">Apply Leave</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('ChatInbox')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-primary/20 items-center justify-center mb-3">
+            <Ionicons name="chatbubbles-outline" size={24} color="#6366f1" />
+          </View>
+          <Text className="text-white font-bold">Messages</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('GlobalEventCalendar')}
+          className="w-full bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-indigo-500/20 items-center justify-center mb-3">
+            <Ionicons name="calendar-outline" size={24} color="#818cf8" />
+          </View>
+          <Text className="text-white font-bold">Global Event Calendar</Text>
         </TouchableOpacity>
       </View>
 

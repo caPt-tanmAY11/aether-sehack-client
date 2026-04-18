@@ -14,7 +14,7 @@ export function useSocket() {
     if (isAuthenticated && accessToken) {
       const baseUrl = process.env.EXPO_PUBLIC_API_URL 
         ? process.env.EXPO_PUBLIC_API_URL.replace('/api', '') 
-        : 'http://10.10.120.29:4000';
+        : 'http://10.10.120.239:4000';
         
       socketRef.current = io(baseUrl, {
         auth: { token: accessToken }
@@ -27,16 +27,16 @@ export function useSocket() {
         }
       });
 
-      socketRef.current.on('notification', (data) => {
-        // Update global store
+      socketRef.current.on('notification:new', (data) => {
         useNotificationsStore.getState().prependNotification({
-          _id: Math.random().toString(), // temp id until refreshed
-          message: data.message,
+          _id: data.id || `tmp_${Date.now()}`,
+          title: data.title,
+          body: data.body,
           type: data.type,
           read: false,
-          createdAt: new Date().toISOString()
+          createdAt: data.createdAt || new Date().toISOString(),
         });
-        Alert.alert('New Notification', data.message || 'You have a new update.');
+        Alert.alert('New Notification', data.title || data.body || 'You have a new update.');
       });
 
       return () => {

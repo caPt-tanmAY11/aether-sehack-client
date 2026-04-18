@@ -9,6 +9,7 @@ import EventsScreen from '../screens/student/EventsScreen';
 import IssuesScreen from '../screens/student/IssuesScreen';
 import ProfileScreen from '../screens/student/ProfileScreen';
 import ClubsScreen from '../screens/student/ClubsScreen';
+import BatchesScreen from '../screens/student/BatchesScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -26,6 +27,7 @@ export default function StudentTabs() {
           else if (route.name === 'Events') iconName = focused ? 'flag' : 'flag-outline';
           else if (route.name === 'Issues') iconName = focused ? 'warning' : 'warning-outline';
           else if (route.name === 'Clubs') iconName = focused ? 'people' : 'people-outline';
+          else if (route.name === 'Batches') iconName = focused ? 'layers' : 'layers-outline';
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -53,6 +55,7 @@ export default function StudentTabs() {
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Issues" component={IssuesScreen} />
       <Tab.Screen name="Clubs" component={ClubsScreen} />
+      <Tab.Screen name="Batches" component={BatchesScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

@@ -7,6 +7,11 @@ import VacantRoomsScreen from '../screens/student/VacantRoomsScreen';
 import NotificationsScreen from '../screens/student/NotificationsScreen';
 import NoticesScreen from '../screens/student/NoticesScreen';
 import ClubsScreen from '../screens/student/ClubsScreen';
+import ChatScreen from '../screens/student/ChatScreen';
+import StudentAdvisingScreen from '../screens/student/StudentAdvisingScreen';
+import LeaveApplicationScreen from '../screens/student/LeaveApplicationScreen';
+import ChatInboxScreen from '../screens/student/ChatInboxScreen';
+import GlobalEventCalendarScreen from '../screens/student/GlobalEventCalendarScreen';
 
 const Stack = createStackNavigator();
 
@@ -24,6 +29,11 @@ export default function StudentStack() {
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Notices" component={NoticesScreen} />
       <Stack.Screen name="Clubs" component={ClubsScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="Advising" component={StudentAdvisingScreen} />
+      <Stack.Screen name="LeaveApplication" component={LeaveApplicationScreen} />
+      <Stack.Screen name="ChatInbox" component={ChatInboxScreen} />
+      <Stack.Screen name="GlobalEventCalendar" component={GlobalEventCalendarScreen} />
     </Stack.Navigator>
   );
 }

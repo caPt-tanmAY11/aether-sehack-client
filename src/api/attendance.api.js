@@ -1,15 +1,16 @@
 import { apiClient } from './client';
 
 export const attendanceApi = {
-  markAttendance: async (timetableId, day, startTime, studentCoord) => {
-    // Requires { timetableId, day, startTime, date (YYYY-MM-DD), studentCoord }
-    const date = new Date().toISOString().split('T')[0];
+  markAttendance: async (timetableId, day, startTime, studentCoord, status, slotDate) => {
+    // slotDate is pre-computed by the screen for the slot's actual week date
+    const date = slotDate || new Date().toISOString().split('T')[0];
     const res = await apiClient.post('/attendance/mark', {
       timetableId,
       day,
       startTime,
       date,
-      studentCoord
+      status: status || 'present',
+      studentCoord: studentCoord || undefined,
     });
     return res.data;
   },
@@ -19,8 +20,14 @@ export const attendanceApi = {
     return res.data.data;
   },
 
-  override: async (studentId, date, startTime, status) => {
-    const res = await apiClient.patch('/attendance/override', { studentId, date, startTime, status });
+  getDetailedReport: async () => {
+    const res = await apiClient.get('/attendance/me/detailed');
+    return res.data.data;
+  },
+
+  // subjectId, division, date (YYYY-MM-DD), updates: [{ studentId, status }]
+  override: async ({ subjectId, division, date, updates }) => {
+    const res = await apiClient.patch('/attendance/override', { subjectId, division, date, updates });
     return res.data.data;
   }
 };

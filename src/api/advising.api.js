@@ -42,4 +42,28 @@ export const advisingApi = {
     const res = await apiClient.get('/advising/shared-with-me');
     return res.data.data;
   },
+
+  // Student: submit an advising request
+  createRequest: async ({ facultyId, message }) => {
+    const res = await apiClient.post('/advising/request', { facultyId, message });
+    return res.data.data;
+  },
+
+  // Student: my request history
+  getMyRequests: async () => {
+    const res = await apiClient.get('/advising/my-requests');
+    return res.data.data;
+  },
+
+  // Faculty: incoming requests
+  getIncomingRequests: async () => {
+    const res = await apiClient.get('/advising/incoming-requests');
+    return res.data.data;
+  },
+
+  // Faculty: update a request status
+  updateRequest: async (requestId, { status, facultyReply }) => {
+    const res = await apiClient.patch(`/advising/request/${requestId}`, { status, facultyReply });
+    return res.data.data;
+  },
 };

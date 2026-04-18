@@ -8,7 +8,7 @@ export default function LeaveScreen({ navigation }) {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [leaveType, setLeaveType] = useState('sick');
+  const [leaveType, setLeaveType] = useState('casual');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
@@ -100,7 +100,7 @@ export default function LeaveScreen({ navigation }) {
           )
         ) : (
           <View className="bg-card p-4 rounded-2xl border border-border mb-8">
-            <Text className="text-muted text-sm font-bold mb-2">Leave Type (sick, casual, duty)</Text>
+            <Text className="text-muted text-sm font-bold mb-2">Leave Type (casual, medical, earned, duty, maternity, paternity, unpaid)</Text>
             <TextInput
               className="bg-surface text-white p-3 rounded-xl border border-border mb-4 capitalize"
               value={leaveType}

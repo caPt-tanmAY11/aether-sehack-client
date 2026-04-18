@@ -41,12 +41,50 @@ export default function FacultyHomeScreen() {
           </View>
           <Text className="text-white font-bold text-center">Update Syllabus</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => navigation.navigate('AttendanceOverride')}
-          className="w-full bg-card p-4 rounded-2xl border border-border mb-4 items-center flex-row justify-center"
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
         >
-          <Ionicons name="shield-checkmark" size={24} color="#6366f1" className="mr-2" />
-          <Text className="text-white font-bold text-center ml-2">Override Student Attendance</Text>
+          <View className="w-12 h-12 rounded-full bg-primary/20 items-center justify-center mb-3">
+            <Ionicons name="shield-checkmark" size={24} color="#6366f1" />
+          </View>
+          <Text className="text-white font-bold text-center">Override Attendance</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AttendanceViewer')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-indigo-500/20 items-center justify-center mb-3">
+            <Ionicons name="eye" size={24} color="#818cf8" />
+          </View>
+          <Text className="text-white font-bold text-center">View Daily Attendance</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Batches')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-success/20 items-center justify-center mb-3">
+            <Ionicons name="people" size={24} color="#22c55e" />
+          </View>
+          <Text className="text-white font-bold text-center">My Batches</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('StudentLeaves')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-warning/20 items-center justify-center mb-3">
+            <Ionicons name="calendar-outline" size={24} color="#f59e0b" />
+          </View>
+          <Text className="text-white font-bold text-center">Student Leaves</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Advising')}
+          className="w-[48%] bg-card p-4 rounded-2xl border border-border mb-4 items-center"
+        >
+          <View className="w-12 h-12 rounded-full bg-primary/20 items-center justify-center mb-3">
+            <Ionicons name="mail-unread-outline" size={24} color="#6366f1" />
+          </View>
+          <Text className="text-white font-bold text-center">Advising Requests</Text>
         </TouchableOpacity>
       </View>
       

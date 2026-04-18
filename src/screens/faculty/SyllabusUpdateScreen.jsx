@@ -20,7 +20,7 @@ export default function SyllabusUpdateScreen() {
       
       // Calculate progress percentage for UI
       const processed = trackers.map(t => {
-        const completedCount = t.topics.filter(topic => topic.status === 'completed').length;
+        const completedCount = t.topics.filter(topic => topic.status === 'done').length;
         const totalTopics = t.topics.length || 1;
         return {
           ...t,
@@ -58,20 +58,28 @@ export default function SyllabusUpdateScreen() {
           <View className="h-2 bg-surface rounded-full overflow-hidden mb-4">
             <View className="h-full bg-primary" style={{ width: `${tracker.progress}%` }} />
           </View>
-          
-          <TouchableOpacity 
-            className="bg-surface p-3 rounded-xl border border-border items-center flex-row justify-center"
-            onPress={async () => {
-              try {
-                await syllabusApi.updateTopic(tracker._id, { topicIndex: tracker.completedCount, completed: true });
-                Alert.alert('Success', 'Topic marked done');
-                fetchSyllabus();
-              } catch (err) { Alert.alert('Error', 'Failed to update'); }
-            }}
-          >
-            <Ionicons name="checkmark-circle-outline" size={20} color="#f1f5f9" className="mr-2" />
-            <Text className="text-white font-bold ml-2">Mark Next Topic Done</Text>
-          </TouchableOpacity>
+          <View className="mt-4 border-t border-border pt-4">
+            <Text className="text-white font-bold mb-2">Topics:</Text>
+            {tracker.topics.map(topic => (
+              <View key={topic._id} className="flex-row items-center justify-between py-2 border-b border-border/50">
+                <Text className="text-slate-300 flex-1">{topic.name}</Text>
+                <TouchableOpacity 
+                  onPress={async () => {
+                    const newStatus = topic.status === 'done' ? 'pending' : 'done';
+                    try {
+                      await syllabusApi.updateTopic(tracker._id, { topicId: topic._id, status: newStatus });
+                      fetchSyllabus();
+                    } catch (err) { Alert.alert('Error', 'Failed to update topic'); }
+                  }}
+                  className={`px-3 py-1 rounded-full border ${topic.status === 'done' ? 'bg-success/20 border-success' : 'bg-surface border-border'}`}
+                >
+                  <Text className={`text-xs font-bold ${topic.status === 'done' ? 'text-success' : 'text-muted'}`}>
+                    {topic.status === 'done' ? 'DONE' : 'PENDING'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
         </View>
       ))}
 

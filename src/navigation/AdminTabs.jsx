@@ -39,7 +39,7 @@ export default function AdminTabs() {
         headerTintColor: '#f1f5f9',
       })}
     >
-      <Tab.Screen name="Home" component={AdminHomeScreen} options={{ title: `${role.toUpperCase()} Portal` }} />
+      <Tab.Screen name="Home" component={AdminHomeScreen} options={{ title: `${role?.toUpperCase() ?? 'Admin'} Portal` }} />
       {(role === 'hod' || role === 'dean' || role === 'superadmin') && (
         <Tab.Screen name="Analytics" component={AnalyticsDashboardScreen} />
       )}

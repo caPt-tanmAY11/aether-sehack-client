@@ -3,16 +3,37 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityInd
 import { eventsApi } from '../../api/events.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function EventSubmissionScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [venue, setVenue] = useState('Auditorium');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  
+  const d = new Date();
+  const [start, setStart] = useState(d);
+  const [end, setEnd] = useState(new Date(d.getTime() + 2 * 60 * 60 * 1000));
+  
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerMode, setPickerMode] = useState('date');
+  const [activeField, setActiveField] = useState('start');
+
   const [expectedAttendance, setExpectedAttendance] = useState('100');
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+
+  const handleShowPicker = (field, mode) => {
+    setActiveField(field);
+    setPickerMode(mode);
+    setShowPicker(true);
+  };
+
+  const handlePickerChange = (event, selectedDate) => {
+    setShowPicker(false);
+    if (!selectedDate) return;
+    if (activeField === 'start') setStart(selectedDate);
+    else setEnd(selectedDate);
+  };
 
   const handleSubmit = async () => {
     try {
@@ -21,8 +42,8 @@ export default function EventSubmissionScreen() {
         title,
         description,
         venue,
-        startTime: new Date(startTime).toISOString(),
-        endTime: new Date(endTime).toISOString(),
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
         expectedAttendance: Number(expectedAttendance)
       });
       Alert.alert('Success', 'Event submitted to Council for review!');
@@ -71,23 +92,41 @@ export default function EventSubmissionScreen() {
           onChangeText={setVenue}
         />
 
-        <Text className="text-muted text-sm font-bold mb-2">Start Time (YYYY-MM-DDTHH:mm)</Text>
-        <TextInput
-          className="bg-surface text-white p-3 rounded-xl border border-border mb-4"
-          placeholder="2026-10-15T09:00"
-          placeholderTextColor="#64748b"
-          value={startTime}
-          onChangeText={setStartTime}
-        />
+        <Text className="text-muted text-sm font-bold mb-2">Start Time</Text>
+        <View className="flex-row gap-2 mb-4">
+          <TouchableOpacity 
+            onPress={() => handleShowPicker('start', 'date')}
+            className="flex-1 bg-surface p-3 rounded-xl border border-border flex-row items-center justify-between"
+          >
+            <Text className="text-white">{start.toLocaleDateString()}</Text>
+            <Ionicons name="calendar-outline" size={16} color="#64748b" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => handleShowPicker('start', 'time')}
+            className="flex-1 bg-surface p-3 rounded-xl border border-border flex-row items-center justify-between"
+          >
+            <Text className="text-white">{start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+            <Ionicons name="time-outline" size={16} color="#64748b" />
+          </TouchableOpacity>
+        </View>
 
-        <Text className="text-muted text-sm font-bold mb-2">End Time (YYYY-MM-DDTHH:mm)</Text>
-        <TextInput
-          className="bg-surface text-white p-3 rounded-xl border border-border mb-4"
-          placeholder="2026-10-15T17:00"
-          placeholderTextColor="#64748b"
-          value={endTime}
-          onChangeText={setEndTime}
-        />
+        <Text className="text-muted text-sm font-bold mb-2">End Time</Text>
+        <View className="flex-row gap-2 mb-4">
+          <TouchableOpacity 
+            onPress={() => handleShowPicker('end', 'date')}
+            className="flex-1 bg-surface p-3 rounded-xl border border-border flex-row items-center justify-between"
+          >
+            <Text className="text-white">{end.toLocaleDateString()}</Text>
+            <Ionicons name="calendar-outline" size={16} color="#64748b" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => handleShowPicker('end', 'time')}
+            className="flex-1 bg-surface p-3 rounded-xl border border-border flex-row items-center justify-between"
+          >
+            <Text className="text-white">{end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+            <Ionicons name="time-outline" size={16} color="#64748b" />
+          </TouchableOpacity>
+        </View>
 
         <Text className="text-muted text-sm font-bold mb-2">Expected Attendance</Text>
         <TextInput
@@ -105,6 +144,16 @@ export default function EventSubmissionScreen() {
       >
         {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">Submit Request</Text>}
       </TouchableOpacity>
+
+      {showPicker && (
+        <DateTimePicker
+          value={activeField === 'start' ? start : end}
+          mode={pickerMode}
+          is24Hour={false}
+          display="default"
+          onChange={handlePickerChange}
+        />
+      )}
     </ScrollView>
   );
 }

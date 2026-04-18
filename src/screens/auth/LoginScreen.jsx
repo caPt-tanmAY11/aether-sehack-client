@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useAuthStore } from '../../store/auth.store';
 import { authApi } from '../../api/auth.api';
+import { apiClient } from '../../api/client';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -22,7 +23,15 @@ export default function LoginScreen() {
     
     try {
       const data = await authApi.login(email.toLowerCase().trim(), password);
+      // First store tokens so apiClient can use them for the profile call
       login(data.user, data.accessToken, data.refreshToken);
+      // Then fetch full profile (populated departmentId, etc.) and update user
+      try {
+        const fullUser = await authApi.getProfile();
+        login(fullUser, data.accessToken, data.refreshToken);
+      } catch {
+        // If profile fetch fails, the basic user object still works
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials or server error');
     } finally {

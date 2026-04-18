@@ -5,6 +5,7 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import StudentStack from './StudentStack';
 import FacultyStack from './FacultyStack';
 import AdminStack from './AdminStack';
+import CommitteeStack from './CommitteeStack';
 import { useSocket } from '../hooks/useSocket';
 
 export default function RootNavigator() {
@@ -21,6 +22,7 @@ export default function RootNavigator() {
   // Role based routing
   if (role === 'student') return <StudentStack />;
   if (role === 'faculty') return <FacultyStack />;
+  if (role === 'committee') return <CommitteeStack />;
   
   // Council, HOD, Dean, Superadmin
   if (['council', 'hod', 'dean', 'superadmin'].includes(role)) return <AdminStack />;

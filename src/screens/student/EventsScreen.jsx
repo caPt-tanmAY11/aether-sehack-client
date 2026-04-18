@@ -12,7 +12,7 @@ export default function EventsScreen() {
   const role = useAuthStore(state => state.role);
   const subRole = useAuthStore(state => state.subRole);
   const navigation = useNavigation();
-  const canRaiseEvent = role === 'council' || ['committee_head', 'class_rep', 'sports_secretary'].includes(subRole);
+  const canRaiseEvent = role === 'student' || role === 'council';
 
   useEffect(() => {
     fetchEvents();

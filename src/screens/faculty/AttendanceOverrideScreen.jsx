@@ -35,10 +35,10 @@ export default function AttendanceOverrideScreen() {
       </View>
 
       <View className="bg-card p-4 rounded-2xl border border-border mb-4">
-        <Text className="text-muted text-sm font-bold mb-2">Student ID (Mongo Object ID)</Text>
+        <Text className="text-muted text-sm font-bold mb-2">Student Enrollment No</Text>
         <TextInput
           className="bg-surface text-white p-3 rounded-xl border border-border mb-4"
-          placeholder="e.g. 64b8e..."
+          placeholder="e.g. extc2024001"
           placeholderTextColor="#64748b"
           value={studentId}
           onChangeText={setStudentId}
