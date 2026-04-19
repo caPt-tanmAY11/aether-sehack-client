@@ -212,9 +212,9 @@ export default function AnalyticsDashboardScreen() {
           {/* ── OVERALL METRICS (Normal Theme) ── */}
           <Text style={[s.sectionTitle, { color: T.text, textTransform: 'none' }]}>Overall Metrics</Text>
           <View style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
-            {renderProgressBar('Avg Campus Attendance', data.attendance?.avgAttendancePercent || 84, T.accent)}
-            {renderProgressBar('Avg Syllabus Progress', data.syllabus?.avgProgressPercent || 67, T.success)}
-            {renderProgressBar('Issue Resolution Rate', data.issues?.total ? Math.round((data.issues.resolved / data.issues.total) * 100) : 92, T.warning)}
+            {renderProgressBar('Avg Campus Attendance', data.attendance?.overallPercent ?? data.attendance?.avgAttendancePercent ?? 84, T.accent)}
+            {renderProgressBar('Avg Syllabus Progress', data.syllabus?.averageCompletion ?? data.syllabus?.avgProgressPercent ?? 67, T.success)}
+            {renderProgressBar('Issue Resolution Rate', data.issues?.total ? Math.round(((data.issues.resolved ?? data.issues.resolvedCount ?? 0) / data.issues.total) * 100) : 92, T.warning)}
           </View>
 
           {/* ── DETAILED REPORTS (Normal Theme) ── */}
@@ -222,9 +222,9 @@ export default function AnalyticsDashboardScreen() {
           <View style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
             <View style={{ borderBottomWidth: 1, borderBottomColor: T.border, paddingBottom: 16, marginBottom: 16 }}>
               <Text style={{ color: T.text, fontWeight: '900', fontSize: 15, marginBottom: 8 }}>Event Statistics</Text>
-              <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 4 }}>Approved: {data.events?.approvedCount || 24}</Text>
-              <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 4 }}>Pending: {data.events?.pendingCount || 8}</Text>
-              <Text style={{ color: T.textSub, fontSize: 13 }}>Rejected: {data.events?.rejectedCount || 3}</Text>
+              <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 4 }}>Approved: {data.events?.approved ?? data.events?.approvedCount ?? 24}</Text>
+              <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 4 }}>Pending: {data.events?.pending ?? data.events?.pendingCount ?? 8}</Text>
+              <Text style={{ color: T.textSub, fontSize: 13 }}>Rejected: {data.events?.rejected ?? data.events?.rejectedCount ?? 3}</Text>
             </View>
 
             <View style={{ borderBottomWidth: (role === 'dean' && data.deanReport) ? 1 : 0, borderBottomColor: T.border, paddingBottom: (role === 'dean' && data.deanReport) ? 16 : 0, marginBottom: (role === 'dean' && data.deanReport) ? 16 : 0 }}>
@@ -237,8 +237,8 @@ export default function AnalyticsDashboardScreen() {
             {(role === 'dean' || role === 'superadmin') && (
               <View>
                 <Text style={{ color: T.text, fontWeight: '900', fontSize: 15, marginBottom: 8 }}>College Overview</Text>
-                <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 4 }}>Total Students: {data.deanReport?.totalStudents || 1250}</Text>
-                <Text style={{ color: T.textSub, fontSize: 13 }}>Total Faculty: {data.deanReport?.totalFaculty || 85}</Text>
+                <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 4 }}>Total Students: {data.totalStudents ?? data.deanReport?.totalStudents ?? 1250}</Text>
+                <Text style={{ color: T.textSub, fontSize: 13 }}>Total Faculty: {data.totalFaculty ?? data.deanReport?.totalFaculty ?? 85}</Text>
               </View>
             )}
           </View>

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } fr
 import { Ionicons } from '@expo/vector-icons';
 import { noticesApi } from '../../api/notices.api';
 import { useAuthStore } from '../../store/auth.store';
+import { useSocket } from '../../hooks/SocketContext';
 import { useTheme } from '../../hooks/ThemeContext';
 
 export default function NoticesScreen({ navigation }) {
@@ -11,10 +12,18 @@ export default function NoticesScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const role = useAuthStore(state => state.role);
   const isFacultyOrAdmin = role === 'faculty' || role === 'hod' || role === 'dean';
+  const socket = useSocket();
 
   useEffect(() => {
     fetchNotices();
   }, []);
+
+  // Real-time: auto-refresh when a new notice is published
+  useEffect(() => {
+    if (!socket) return;
+    socket.on('notice:new', fetchNotices);
+    return () => socket.off('notice:new', fetchNotices);
+  }, [socket]);
 
   const fetchNotices = async () => {
     try {

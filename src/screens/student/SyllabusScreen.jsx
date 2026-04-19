@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { syllabusApi } from '../../api/syllabus.api';
 import { useAuthStore } from '../../store/auth.store';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSocket } from '../../hooks/SocketContext';
 import { useTheme } from '../../hooks/ThemeContext';
 import AppHeader from '../../components/AppHeader';
 
@@ -13,9 +14,16 @@ export default function SyllabusScreen() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState({});
   const user = useAuthStore(state => state.user);
+  const socket = useSocket();
 
   useFocusEffect(useCallback(() => { fetchSyllabus(); }, []));
 
+  // Real-time update: when faculty marks a topic done, refresh
+  useEffect(() => {
+    if (!socket) return;
+    socket.on('syllabus_updated', fetchSyllabus);
+    return () => socket.off('syllabus_updated', fetchSyllabus);
+  }, [socket]);
   const fetchSyllabus = async () => {
     try {
       setLoading(true);
