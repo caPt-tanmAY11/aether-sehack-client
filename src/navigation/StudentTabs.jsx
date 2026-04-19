@@ -1,6 +1,8 @@
 import React from 'react';
+import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import FloatingTabBar from '../components/FloatingTabBar';
 import HomeScreen from '../screens/student/HomeScreen';
 import TimetableScreen from '../screens/student/TimetableScreen';
 import AttendanceScreen from '../screens/student/AttendanceScreen';
@@ -16,7 +18,9 @@ const Tab = createBottomTabNavigator();
 
 export default function StudentTabs() {
   return (
+    <>
     <Tab.Navigator
+      tabBar={props => <FloatingTabBar {...props} />}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -48,6 +52,7 @@ export default function StudentTabs() {
           elevation: 0,
         },
         headerTintColor: '#f1f5f9',
+        headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Dashboard' }} />
@@ -61,5 +66,6 @@ export default function StudentTabs() {
       <Tab.Screen name="Apps" component={MiniAppMarketplaceScreen} options={{ title: 'Mini Apps' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+    </>
   );
 }

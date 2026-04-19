@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import FloatingTabBar from '../components/FloatingTabBar';
 import FacultyHomeScreen from '../screens/faculty/FacultyHomeScreen';
 import ProfileScreen from '../screens/student/ProfileScreen'; // Reusing profile screen
 
@@ -8,7 +9,9 @@ const Tab = createBottomTabNavigator();
 
 export default function FacultyTabs() {
   return (
+    <>
     <Tab.Navigator
+      tabBar={props => <FloatingTabBar {...props} />}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -33,6 +36,7 @@ export default function FacultyTabs() {
           elevation: 0,
         },
         headerTintColor: '#f1f5f9',
+        headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={FacultyHomeScreen} options={{ title: 'Faculty Portal' }} />
@@ -41,5 +45,6 @@ export default function FacultyTabs() {
       <Tab.Screen name="Leave" component={require('../screens/faculty/LeaveScreen').default} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+    </>
   );
 }

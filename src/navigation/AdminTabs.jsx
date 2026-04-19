@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import FloatingTabBar from '../components/FloatingTabBar';
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
 import HomeScreen from '../screens/student/HomeScreen';
 import AnalyticsDashboardScreen from '../screens/admin/AnalyticsDashboardScreen';
@@ -15,7 +16,9 @@ export default function AdminTabs() {
   const role = useAuthStore(state => state.role);
   
   return (
+    <>
     <Tab.Navigator
+      tabBar={props => <FloatingTabBar {...props} />}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -41,6 +44,7 @@ export default function AdminTabs() {
           elevation: 0,
         },
         headerTintColor: '#f1f5f9',
+        headerShown: false,
       })}
     >
       <Tab.Screen name="Personal" component={HomeScreen} options={{ title: 'Personal' }} />
@@ -58,5 +62,6 @@ export default function AdminTabs() {
       <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+    </>
   );
 }

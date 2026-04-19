@@ -25,8 +25,8 @@ export default function GlobalEventCalendarScreen() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+        setLoading(false);
+        setRefreshing(false);
     }
   };
 
@@ -49,8 +49,8 @@ export default function GlobalEventCalendarScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-surface justify-center items-center">
-        <ActivityIndicator color="#6366f1" size="large" />
+      <View style={{ flex: 1, backgroundColor: '#f7f9fb', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator color="#6b38d4" size="large" />
       </View>
     );
   }
@@ -64,20 +64,21 @@ export default function GlobalEventCalendarScreen() {
   });
 
   return (
-    <View className="flex-1 bg-surface">
-      {/* Header */}
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border flex-row items-center">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
+    <View style={{ flex: 1, backgroundColor: '#f7f9fb' }}>
+      {/* Top Header */}
+      <View style={{ paddingTop: 50, paddingBottom: 16, paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', gap: 12, zIndex: 10, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#eceef0' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8, backgroundColor: '#eceef0', borderRadius: 999 }}>
+          <Ionicons name="arrow-back" size={24} color="#091426" />
         </TouchableOpacity>
-        <Text className="text-white text-2xl font-bold">College Events</Text>
+        <Text style={{ fontSize: 24, fontWeight: '800', color: '#091426', fontFamily: 'Plus Jakarta Sans' }}>Campus Events</Text>
       </View>
 
       <ScrollView 
-        className="flex-1 px-4 pt-6"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 150 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6b38d4" />}
       >
-        <View className="mb-6">
+        <View style={{ backgroundColor: '#ffffff', borderRadius: 24, padding: 16, shadowColor: '#091426', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 16, elevation: 2, marginBottom: 24 }}>
           <CalendarView 
             value={selectedDate} 
             onChange={setSelectedDate} 
@@ -89,12 +90,15 @@ export default function GlobalEventCalendarScreen() {
           />
         </View>
 
-        <Text className="text-white text-lg font-bold mb-4">Events on {new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
+        <Text style={{ color: '#091426', fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Agenda for {new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
         
         {filteredEvents.length === 0 ? (
-          <View className="items-center py-10 bg-card border border-border rounded-2xl">
-            <Ionicons name="calendar-clear-outline" size={48} color="#64748b" />
-            <Text className="text-muted mt-4 text-center px-4">No events scheduled for this date.</Text>
+          <View style={{ backgroundColor: '#ffffff', borderRadius: 24, padding: 32, alignItems: 'center', shadowColor: '#091426', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.02, shadowRadius: 12, elevation: 1 }}>
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#eceef0', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <Ionicons name="calendar-clear-outline" size={32} color="#8590a6" />
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#091426' }}>No Events Scheduled</Text>
+            <Text style={{ color: '#45474c', marginTop: 4 }}>The campus is quiet today.</Text>
           </View>
         ) : (
           filteredEvents.map(event => {
@@ -105,19 +109,32 @@ export default function GlobalEventCalendarScreen() {
             return (
               <View 
                 key={event._id} 
-                className={`p-4 rounded-2xl border mb-3 flex-row items-center ${isPending ? 'bg-surface border-border opacity-70' : 'bg-card border-primary/50'}`}
+                style={{
+                  backgroundColor: isPending ? '#ffffff' : '#e9ddff',
+                  borderRadius: 20,
+                  padding: 16,
+                  marginBottom: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  shadowColor: '#091426',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: isPending ? 0.02 : 0.08,
+                  shadowRadius: 12,
+                  elevation: 1,
+                  opacity: isPending ? 0.8 : 1
+                }}
               >
-                <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${isPending ? 'bg-surface border border-border' : 'bg-primary/20'}`}>
-                  <Ionicons name={isPending ? 'time-outline' : 'calendar'} size={24} color={isPending ? '#64748b' : '#818cf8'} />
+                <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: isPending ? '#eceef0' : '#ffffff', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                  <Ionicons name={isPending ? 'time-outline' : 'calendar'} size={24} color={isPending ? '#8590a6' : '#6b38d4'} />
                 </View>
-                <View className="flex-1">
-                  <Text className="text-white text-base font-bold">{event.title}</Text>
-                  <Text className="text-muted text-xs mt-0.5">{startTime} - {endTime} • {event.venue}</Text>
-                  <Text className="text-indigo-300 text-xs mt-0.5 font-bold">{event.templateType ? event.templateType.toUpperCase() : 'PLAIN'} TEMPLATE</Text>
-                  {isPending && <Text className="text-warning text-xs font-bold mt-1">Pending Approval ({event.currentStage})</Text>}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#091426', fontSize: 16, fontWeight: 'bold', marginBottom: 2 }}>{event.title}</Text>
+                  <Text style={{ color: '#45474c', fontSize: 12 }}>{startTime} - {endTime} • {event.venue}</Text>
+                  <Text style={{ color: '#6b38d4', fontSize: 10, fontWeight: 'bold', marginTop: 4 }}>{event.templateType ? event.templateType.toUpperCase() : 'PLAIN'} TEMPLATE</Text>
+                  {isPending && <Text style={{ color: '#eab308', fontSize: 10, fontWeight: 'bold', marginTop: 4, textTransform: 'uppercase' }}>Pending ({event.currentStage})</Text>}
                 </View>
-                <TouchableOpacity onPress={() => viewPdf(event._id)} className="p-2 bg-surface rounded-full border border-border ml-2">
-                  <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+                <TouchableOpacity onPress={() => viewPdf(event._id)} style={{ padding: 12, backgroundColor: '#ffffff', borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 }}>
+                  <Ionicons name="document-text-outline" size={20} color="#6b38d4" />
                 </TouchableOpacity>
               </View>
             );
