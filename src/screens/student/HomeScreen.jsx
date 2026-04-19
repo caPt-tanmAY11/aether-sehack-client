@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuthStore } from '../../store/auth.store';
 import { useNotificationsStore } from '../../store/notifications.store';
 import { attendanceApi } from '../../api/attendance.api';
@@ -8,19 +8,53 @@ import { paymentsApi } from '../../api/payments.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSocket } from '../../hooks/SocketContext';
+import { useTheme } from '../../hooks/ThemeContext';
 
+/* ─── Static campus data ─────────────────────────────────── */
+const QUOTES = [
+  { text: 'An investment in knowledge pays the best interest.', author: 'Benjamin Franklin' },
+  { text: 'Education is not the filling of a pail, but the lighting of a fire.', author: 'W.B. Yeats' },
+  { text: 'The beautiful thing about learning is that no one can take it away from you.', author: 'B.B. King' },
+  { text: 'Intelligence plus character — that is the goal of true education.', author: 'Martin Luther King Jr.' },
+  { text: 'Education is the most powerful weapon you can use to change the world.', author: 'Nelson Mandela' },
+  { text: 'Strive for progress, not perfection.', author: 'Campus Wisdom' },
+  { text: 'Your future is created by what you do today, not tomorrow.', author: 'Robert T. Kiyosaki' },
+];
+
+const WEEK_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 6)  return { text: 'Up Early',        icon: '🌙' };
+  if (h < 12) return { text: 'Good Morning',     icon: '☀️' };
+  if (h < 17) return { text: 'Good Afternoon',   icon: '⚡' };
+  if (h < 21) return { text: 'Good Evening',     icon: '🌆' };
+  return           { text: 'Burning Midnight Oil', icon: '🌙' };
+}
+
+function getWeekDay() {
+  const d = new Date().getDay(); // 0=Sun
+  return d === 0 || d === 6 ? -1 : d - 1; // 0=Mon … 4=Fri, -1=weekend
+}
+
+function getTodayQuote() {
+  const idx = Math.floor(Date.now() / 86400000) % QUOTES.length;
+  return QUOTES[idx];
+}
+
+/* ─── Component ─────────────────────────────────────────── */
 export default function HomeScreen() {
-  const user = useAuthStore(state => state.user);
-  const logout = useAuthStore(state => state.logout);
-  const unreadCount = useNotificationsStore(state => state.unreadCount);
-  const navigation = useNavigation();
+  const user          = useAuthStore(s => s.user);
+  const logout        = useAuthStore(s => s.logout);
+  const unreadCount   = useNotificationsStore(s => s.unreadCount);
+  const navigation    = useNavigation();
+  const { theme, isDark, toggle } = useTheme();
+  const socket        = useSocket();
 
-  const [attendance, setAttendance] = useState(null);
-  const [nextClass, setNextClass] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [outstanding, setOutstanding] = useState({ totalRupees: '0.00', count: 0 });
-
-  const socket = useSocket();
+  const [attendance,   setAttendance]   = useState(null);
+  const [nextClass,    setNextClass]    = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [outstanding,  setOutstanding]  = useState({ totalRupees: '0.00', count: 0 });
 
   const fetchDashboardData = async () => {
     try {
@@ -32,171 +66,497 @@ export default function HomeScreen() {
       setAttendance(attRes);
       setNextClass(classRes);
       if (duesRes) setOutstanding(duesRes);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
+  useEffect(() => { fetchDashboardData(); }, []);
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('attendance_updated', () => {
-        fetchDashboardData();
-      });
-      return () => socket.off('attendance_updated');
-    }
+    if (!socket) return;
+    socket.on('attendance_updated', fetchDashboardData);
+    return () => socket.off('attendance_updated');
   }, [socket]);
 
+  const initials   = user?.name?.split(' ').map(w => w[0]).slice(0, 2).join('') || 'U';
+  const attPct     = attendance?.overallPercent ?? 0;
+  const attColor   = attPct >= 75 ? theme.success : attPct >= 60 ? theme.warning : theme.error;
+  const greeting   = getGreeting();
+  const weekDay    = getWeekDay();
+  const todayQuote = getTodayQuote();
+  const today      = new Date();
+  const dateStr    = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const quickActions = [
+    { label: 'Ask Aether',    sub: 'AI Copilot',      icon: 'sparkles',                  route: 'Chatbot',          accent: theme.accent },
+    { label: 'Mark Presence', sub: 'Check-in',         icon: 'scan-outline',              route: 'Attendance',       accent: '#0284c7' },
+    { label: 'Find Room',     sub: 'Vacant now',        icon: 'search-outline',            route: 'VacantRooms',      accent: '#059669' },
+    { label: 'Apply Leave',   sub: 'Request absence',  icon: 'calendar-outline',          route: 'LeaveApplication', accent: '#d97706' },
+    { label: 'Messages',      sub: 'Student chat',     icon: 'chatbubble-ellipses-outline',route: 'ChatInbox',        accent: '#7c3aed' },
+  ];
+
+  /* Dynamic styles that depend on theme */
+  const T = theme;
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#f7f9fb' }}>
-        {/* Top App Bar fixed at top */}
-        <View style={{ paddingTop: 50, paddingBottom: 16, paddingHorizontal: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#eceef0' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={{ width: 40, height: 40, borderRadius: 20, overflow: 'hidden', backgroundColor: '#e0e3e5' }}>
-                    {/* Placeholder image, fallback to solid color if missing */}
-                    <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBQCoK3poJqBaoGVvLK9iwuZNCHS77kJ4flg-JrJaJ7YfrmlxU_TvVqCdP40wQ3Jlj8L7IAqhW0AKwVEtWTSQa3P49i6QyLt1-f__ImIm_t5-MDPZG2yqLbTbcPCVbpb6ka8hz06VXqlSfslTyiE9ENRt4oKOvpDBhBnA3dkNK84P8LgUw-IlW4CO3AQ61_g9ZYorFt4hE5kuFE3ZFbU7KiDAm4gX243hNHqCdX2oQ3DEoAZBbxqAF8pzqDeHCWEzaNvhGYfkX7SA' }} style={{ width: '100%', height: '100%' }} />
-                </View>
-                <Text style={{ fontSize: 20, fontWeight: '800', color: '#091426', letterSpacing: -0.5, fontFamily: 'Plus Jakarta Sans' }}>Scholar Flow</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={{ position: 'relative' }}>
-                    <Ionicons name="notifications-outline" size={24} color="#091426" />
-                    {unreadCount > 0 && (
-                        <View style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#ba1a1a', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' }}>
-                            <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{unreadCount}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-                <TouchableOpacity onPress={logout}>
-                    <Ionicons name="log-out-outline" size={24} color="#091426" />
-                </TouchableOpacity>
-            </View>
+    <View style={[s.root, { backgroundColor: T.bg }]}>
+
+      {/* ── Header ──────────────────────────────────────────── */}
+      <View style={[s.header, { backgroundColor: T.headerBg, borderBottomColor: T.headerBorder }]}>
+        <View style={s.headerLeft}>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={[s.avatar, { backgroundColor: T.accentSoft, borderColor: T.accent }]} activeOpacity={0.8}>
+            <Text style={[s.avatarText, { color: T.accent }]}>{initials}</Text>
+          </TouchableOpacity>
+          <View>
+            <Text style={[s.brand, { color: T.text }]}>Aether</Text>
+            <Text style={[s.subBrand, { color: T.muted }]}>Campus OS</Text>
+          </View>
+        </View>
+        <View style={s.headerRight}>
+          {/* Theme Toggle */}
+          <TouchableOpacity onPress={toggle} style={[s.iconBtn, { backgroundColor: T.iconBg }]} activeOpacity={0.7}>
+            <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={18} color={T.text} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={[s.iconBtn, { backgroundColor: T.iconBg }]} activeOpacity={0.7}>
+            <Ionicons name="notifications-outline" size={18} color={T.text} />
+            {unreadCount > 0 && (
+              <View style={s.badge}>
+                <Text style={s.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={logout} style={[s.iconBtn, { backgroundColor: T.iconBg }]} activeOpacity={0.7}>
+            <Ionicons name="log-out-outline" size={18} color={T.text} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* ── Date & Greeting ──────────────────────────────── */}
+        <View style={{ marginBottom: 6 }}>
+          <Text style={[s.dateStr, { color: T.muted }]}>{dateStr}</Text>
+          <Text style={[s.eyebrow, { color: T.accent }]}>
+            {greeting.icon}  {greeting.text}, {user?.name?.split(' ')[0] || 'Student'}
+          </Text>
+          <Text style={[s.heroTitle, { color: T.text }]}>
+            The Campus is{' '}
+            <Text style={{ color: T.accent }}>Buzzing</Text>
+          </Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 150 }} showsVerticalScrollIndicator={false}>
-            {/* Welcome Header */}
-            <View style={{ marginBottom: 30 }}>
-                <Text style={{ color: '#6b38d4', fontWeight: 'bold', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Welcome Back, {user?.name?.split(' ')[0] || 'Student'}</Text>
-                <Text style={{ fontSize: 42, fontWeight: '900', color: '#091426', lineHeight: 46, letterSpacing: -1 }}>The Campus is <Text style={{ color: '#6b38d4' }}>Buzzing</Text></Text>
-            </View>
-
-            {/* Bento Grid */}
-            <View style={{ flexDirection: 'column', gap: 16 }}>
-                
-                {/* Next Class Hero Card */}
-                {nextClass ? (
-                    <TouchableOpacity onPress={() => navigation.navigate('Timetable')} activeOpacity={0.9} style={{ backgroundColor: '#091426', borderRadius: 24, padding: 24, overflow: 'hidden', minHeight: 220, justifyContent: 'space-between' }}>
-                        <View style={{ zIndex: 10 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, marginBottom: 16 }}>
-                                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ade80', marginRight: 8 }} />
-                                <Text style={{ color: 'white', fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 }}>Next Up • {nextClass.startTime}</Text>
-                            </View>
-                            <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold', marginBottom: 8, lineHeight: 30 }}>{nextClass.subject?.name}</Text>
-                            <Text style={{ color: '#bcc7de', fontSize: 14 }}>{nextClass.room?.name || 'TBA'}</Text>
-                        </View>
-                        <View style={{ zIndex: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
-                            <View style={{ backgroundColor: '#6b38d4', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999, flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ color: 'white', fontWeight: 'bold', marginRight: 8 }}>Check-in</Text>
-                                <Ionicons name="log-in-outline" size={16} color="white" />
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                ) : (
-                    <View style={{ backgroundColor: '#091426', borderRadius: 24, padding: 24, minHeight: 180, justifyContent: 'center' }}>
-                         <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 8 }}>No Upcoming Classes</Text>
-                         <Text style={{ color: '#bcc7de', fontSize: 14 }}>You have free time right now!</Text>
-                    </View>
-                )}
-
-                {/* Academic Progress & Attendance */}
-                <View style={{ flexDirection: 'row', gap: 16 }}>
-                    {/* Progress */}
-                    <View style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: 24, padding: 20, shadowColor: '#091426', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.04, shadowRadius: 24, elevation: 2 }}>
-                        <Text style={{ color: '#091426', fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}>Attendance</Text>
-                        <Text style={{ color: '#45474c', fontSize: 12, marginBottom: 16 }}>Overall Status</Text>
-                        {loading ? <ActivityIndicator color="#6b38d4" /> : (
-                            <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 10 }}>
-                                <Text style={{ fontSize: 36, fontWeight: '800', color: '#091426' }}>{attendance?.overallPercent ?? 0}%</Text>
-                            </View>
-                        )}
-                        <View style={{ flexDirection: 'row', gap: 4, marginTop: 8 }}>
-                            <View style={{ flex: 1, height: 4, backgroundColor: '#6b38d4', borderRadius: 2 }} />
-                            <View style={{ flex: 1, height: 4, backgroundColor: '#6b38d4', borderRadius: 2 }} />
-                            <View style={{ flex: 1, height: 4, backgroundColor: '#f2f4f6', borderRadius: 2 }} />
-                        </View>
-                    </View>
-
-                    {/* Due Alerts */}
-                    <TouchableOpacity onPress={() => navigation.navigate('MyDues')} style={{ flex: 1, backgroundColor: outstanding.count > 0 ? '#ffdad6' : '#eceef0', borderRadius: 24, padding: 20, justifyContent: 'space-between' }}>
-                        <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: outstanding.count > 0 ? '#ba1a1a' : '#091426', alignItems: 'center', justifyContent: 'center' }}>
-                            <Ionicons name="wallet-outline" size={24} color="white" />
-                        </View>
-                        <View style={{ marginTop: 24 }}>
-                            <Text style={{ color: outstanding.count > 0 ? '#93000a' : '#6b38d4', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{outstanding.count > 0 ? 'Action Required' : 'All Clear'}</Text>
-                            <Text style={{ color: outstanding.count > 0 ? '#ba1a1a' : '#091426', fontWeight: 'bold', fontSize: 18 }}>{outstanding.count > 0 ? `₹${outstanding.totalRupees}` : 'No Dues'}</Text>
-                        </View>
-                    </TouchableOpacity>
+        {/* ── Week Strip ───────────────────────────────────── */}
+        <View style={[s.weekStrip, { backgroundColor: T.card, borderColor: T.border }]}>
+          {WEEK_DAYS.map((d, i) => {
+            const isToday   = i === weekDay;
+            const isPast    = weekDay >= 0 && i < weekDay;
+            const isFuture  = weekDay === -1 || i > weekDay;
+            return (
+              <View key={d} style={s.weekDay}>
+                <View style={[
+                  s.weekDot,
+                  { backgroundColor: isToday ? T.accent : isPast ? T.accentSoft : T.iconBg },
+                ]}>
+                  {isToday && <View style={[s.weekDotInner, { backgroundColor: '#ffffff' }]} />}
+                  {isPast  && <Ionicons name="checkmark" size={10} color={T.accent} />}
                 </View>
+                <Text style={[
+                  s.weekLabel,
+                  { color: isToday ? T.accent : isFuture ? T.muted : T.textSub },
+                  isToday && { fontWeight: '900' },
+                ]}>{d}</Text>
+              </View>
+            );
+          })}
+          <View style={[s.weekDivider, { backgroundColor: T.border }]} />
+          <View style={s.weekInfo}>
+            <Text style={[s.weekInfoText, { color: T.muted }]}>
+              {weekDay === -1 ? 'Weekend · Rest up! 🎉' : `Day ${weekDay + 1} of 5 this week`}
+            </Text>
+          </View>
+        </View>
 
-                {/* Club Alert (Hover equivalent) */}
-                <TouchableOpacity onPress={() => navigation.navigate('GlobalEventCalendar')} activeOpacity={0.8} style={{ backgroundColor: '#e6e8ea', borderRadius: 24, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                    <View style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: '#091426', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: {height: 4} }}>
-                        <Ionicons name="calendar" size={32} color="#ffffff" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#6b38d4', fontWeight: 'bold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Global Events</Text>
-                        <Text style={{ color: '#091426', fontWeight: 'bold', fontSize: 18, lineHeight: 22 }}>Check Campus Pulse</Text>
-                        <Text style={{ color: '#45474c', fontSize: 12, marginTop: 4 }}>See what's happening today</Text>
-                    </View>
+        <View style={{ gap: 14 }}>
+
+          {/* ── Next Class Hero ──────────────────────────── */}
+          {nextClass ? (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Timetable')}
+              activeOpacity={0.88}
+              style={[s.heroCard, { backgroundColor: T.heroCardBg }]}
+            >
+              <View style={s.liveChip}>
+                <View style={s.liveDot} />
+                <Text style={s.liveText}>NEXT UP · {nextClass.startTime}</Text>
+              </View>
+              <View style={{ marginTop: 16 }}>
+                <Text style={[s.heroSubject, { color: T.heroCardText }]}>{nextClass.subject?.name}</Text>
+                <Text style={[s.heroRoom, { color: T.heroCardMuted }]}>{nextClass.room?.name || 'Room TBA'}</Text>
+              </View>
+              <View style={s.heroFooter}>
+                <TouchableOpacity style={[s.checkinBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.12)' }]}>
+                  <Text style={[s.checkinText, { color: T.heroCardText }]}>Check-in</Text>
+                  <Ionicons name="arrow-forward" size={13} color={T.heroCardText} />
                 </TouchableOpacity>
+                <Text style={[s.timeText, { color: T.heroCardMuted }]}>{nextClass.startTime}</Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={[s.heroCard, { backgroundColor: T.heroCardBg, justifyContent: 'center', alignItems: 'center', minHeight: 140 }]}>
+              <Ionicons name="cafe-outline" size={30} color="rgba(255,255,255,0.3)" style={{ marginBottom: 10 }} />
+              <Text style={[s.heroSubject, { color: T.heroCardText }]}>No Upcoming Classes</Text>
+              <Text style={[s.heroRoom, { color: T.heroCardMuted }]}>Enjoy your free time!</Text>
+            </View>
+          )}
 
+          {/* ── Stats Row ────────────────────────────────── */}
+          <View style={{ flexDirection: 'row', gap: 14 }}>
+
+            {/* Attendance */}
+            <View style={[s.statCard, { flex: 1, backgroundColor: T.card, borderColor: T.border }]}>
+              <View style={s.statHeader}>
+                <View>
+                  <Text style={[s.statTitle, { color: T.text }]}>Attendance</Text>
+                  <Text style={[s.statSub, { color: T.muted }]}>Overall status</Text>
+                </View>
+                <View style={[s.statIconBox, { backgroundColor: `${attColor}18` }]}>
+                  <Ionicons name="checkmark-circle-outline" size={18} color={attColor} />
+                </View>
+              </View>
+              {loading ? (
+                <ActivityIndicator color={T.accent} size="small" style={{ marginTop: 8 }} />
+              ) : (
+                <>
+                  <Text style={[s.statBig, { color: attColor }]}>{attPct}%</Text>
+                  <View style={[s.progressBar, { backgroundColor: T.iconBg }]}>
+                    <View style={[s.progressFill, { width: `${Math.min(attPct, 100)}%`, backgroundColor: attColor }]} />
+                  </View>
+                </>
+              )}
             </View>
 
-            {/* Quick Actions Horizontal Scroller */}
-            <View style={{ marginTop: 32 }}>
-                <Text style={{ color: '#091426', fontWeight: 'bold', fontSize: 18, marginBottom: 16, paddingHorizontal: 4 }}>Quick Actions</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 10, gap: 12 }}>
-                    
-                    <TouchableOpacity onPress={() => navigation.navigate('Chatbot')} style={{ backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e0e3e5', padding: 16, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 160 }}>
-                        <Ionicons name="chatbubbles" size={24} color="#6b38d4" />
-                        <View>
-                            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#091426' }}>Ask Aether</Text>
-                            <Text style={{ fontSize: 10, color: '#45474c' }}>AI Copilot</Text>
-                        </View>
-                    </TouchableOpacity>
+            {/* Dues */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('MyDues')}
+              style={[
+                s.statCard,
+                { flex: 1, backgroundColor: outstanding.count > 0 ? T.errorSoft : (isDark ? '#0d2010' : '#f0fdf4'), borderColor: T.border },
+              ]}
+              activeOpacity={0.85}
+            >
+              <View style={s.statHeader}>
+                <View>
+                  <Text style={[s.statTitle, { color: T.text }]}>Dues</Text>
+                  <Text style={[s.statSub, { color: T.muted }]}>{outstanding.count > 0 ? 'Action needed' : 'All clear'}</Text>
+                </View>
+                <View style={[s.statIconBox, { backgroundColor: outstanding.count > 0 ? `${T.error}18` : `${T.success}18` }]}>
+                  <Ionicons name="wallet-outline" size={18} color={outstanding.count > 0 ? T.error : T.success} />
+                </View>
+              </View>
+              <Text style={[s.statBig, { color: outstanding.count > 0 ? T.error : T.success }]}>
+                {outstanding.count > 0 ? `₹${outstanding.totalRupees}` : '₹0'}
+              </Text>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: outstanding.count > 0 ? T.error : T.success, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {outstanding.count > 0 ? `${outstanding.count} pending` : 'No dues'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-                    <TouchableOpacity onPress={() => navigation.navigate('Attendance')} style={{ backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e0e3e5', padding: 16, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 160 }}>
-                        <Ionicons name="scan" size={24} color="#6b38d4" />
-                        <View>
-                            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#091426' }}>Mark Presence</Text>
-                            <Text style={{ fontSize: 10, color: '#45474c' }}>Class Check-in</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => navigation.navigate('VacantRooms')} style={{ backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e0e3e5', padding: 16, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 160 }}>
-                        <Ionicons name="search" size={24} color="#6b38d4" />
-                        <View>
-                            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#091426' }}>Find Room</Text>
-                            <Text style={{ fontSize: 10, color: '#45474c' }}>Vacant classes</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => navigation.navigate('LeaveApplication')} style={{ backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e0e3e5', padding: 16, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 160 }}>
-                        <Ionicons name="calendar-outline" size={24} color="#6b38d4" />
-                        <View>
-                            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#091426' }}>Apply Leave</Text>
-                            <Text style={{ fontSize: 10, color: '#45474c' }}>Absence request</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                </ScrollView>
+          {/* ── Campus Pulse ─────────────────────────────── */}
+          <View style={[s.campusCard, { backgroundColor: T.card, borderColor: T.border }]}>
+            <View style={s.campusHeader}>
+              <View style={[s.campusDot, { backgroundColor: '#4ade80' }]} />
+              <Text style={[s.campusTitle, { color: T.text }]}>Campus Live</Text>
+              <Text style={[s.campusLive, { color: T.muted }]}>Right now</Text>
             </View>
-        </ScrollView>
+            <View style={s.campusRow}>
+              {[
+                { icon: 'people-outline',  label: '1,247 on campus',       color: T.accent },
+                { icon: 'book-outline',    label: 'Library: Open',          color: '#059669' },
+                { icon: 'restaurant',      label: 'Cafeteria: Serving',     color: '#d97706' },
+                { icon: 'wifi',            label: 'Campus WiFi: Strong',    color: '#0284c7' },
+              ].map((item, i) => (
+                <View key={i} style={s.campusStat}>
+                  <View style={[s.campusStatIcon, { backgroundColor: `${item.color}14` }]}>
+                    <Ionicons name={item.icon} size={16} color={item.color} />
+                  </View>
+                  <Text style={[s.campusStatText, { color: T.textSub }]}>{item.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* ── Global Events Banner ─────────────────────── */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('GlobalEventCalendar')}
+            activeOpacity={0.85}
+            style={[s.banner, { backgroundColor: T.cardAlt, borderColor: T.border }]}
+          >
+            <View style={[s.bannerIcon, { backgroundColor: T.heroCardBg }]}>
+              <Ionicons name="calendar" size={22} color="#ffffff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.bannerEyebrow, { color: T.accent }]}>Global Events</Text>
+              <Text style={[s.bannerTitle, { color: T.text }]}>Check Campus Pulse</Text>
+              <Text style={[s.bannerSub, { color: T.muted }]}>See what's happening today</Text>
+            </View>
+            <View style={[s.bannerChevron, { backgroundColor: T.iconBg }]}>
+              <Ionicons name="chevron-forward" size={16} color={T.textSub} />
+            </View>
+          </TouchableOpacity>
+
+          {/* ── Quote of the Day ─────────────────────────── */}
+          <View style={[s.quoteCard, { backgroundColor: T.heroCardBg }]}>
+            <View style={s.quoteIconWrap}>
+              <Text style={s.quoteGlyph}>❝</Text>
+            </View>
+            <Text style={[s.quoteText, { color: T.heroCardText }]}>{todayQuote.text}</Text>
+            <Text style={[s.quoteAuthor, { color: T.heroCardMuted }]}>— {todayQuote.author}</Text>
+            <View style={[s.quoteTag, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
+              <Ionicons name="bulb-outline" size={11} color={T.heroCardMuted} />
+              <Text style={[s.quoteTagText, { color: T.heroCardMuted }]}>Quote of the Day</Text>
+            </View>
+          </View>
+
+        </View>
+
+        {/* ── Quick Actions ─────────────────────────────── */}
+        <View style={{ marginTop: 32 }}>
+          <Text style={[s.sectionTitle, { color: T.text }]}>Quick Actions</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 4 }}>
+            {quickActions.map(item => (
+              <TouchableOpacity
+                key={item.route}
+                onPress={() => navigation.navigate(item.route)}
+                style={[s.quickCard, { backgroundColor: T.card, borderColor: T.border }]}
+                activeOpacity={0.8}
+              >
+                <View style={[s.quickIcon, { backgroundColor: `${item.accent}16` }]}>
+                  <Ionicons name={item.icon} size={22} color={item.accent} />
+                </View>
+                <Text style={[s.quickLabel, { color: T.text }]}>{item.label}</Text>
+                <Text style={[s.quickSub, { color: T.muted }]}>{item.sub}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+      </ScrollView>
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  root: { flex: 1 },
+  scroll: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 160 },
+
+  /* Header */
+  header: {
+    paddingTop: 52,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+    zIndex: 10,
+  },
+  headerLeft:  { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+  },
+  avatarText:  { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
+  brand:       { fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
+  subBrand:    { fontSize: 9,  fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 1 },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -1,
+    right: -1,
+    backgroundColor: '#ba1a1a',
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  badgeText: { color: '#ffffff', fontSize: 9, fontWeight: '800' },
+
+  /* Typography */
+  dateStr:     { fontSize: 12, fontWeight: '600', marginBottom: 4 },
+  eyebrow:     { fontSize: 13, fontWeight: '700', marginBottom: 6 },
+  heroTitle:   { fontSize: 34, fontWeight: '900', lineHeight: 40, letterSpacing: -1, marginBottom: 16 },
+  sectionTitle:{ fontSize: 18, fontWeight: '800', marginBottom: 14, letterSpacing: -0.3 },
+
+  /* Week strip */
+  weekStrip: {
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 16,
+    marginBottom: 14,
+  },
+  weekDay:   { flex: 1, alignItems: 'center', gap: 6 },
+  weekDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weekDotInner: { width: 8, height: 8, borderRadius: 4 },
+  weekLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
+  weekDivider: { height: StyleSheet.hairlineWidth, marginVertical: 10 },
+  weekInfo:   { flexDirection: 'row', justifyContent: 'center' },
+  weekInfoText:{ fontSize: 11, fontWeight: '600' },
+
+  /* Cards */
+  heroCard: {
+    borderRadius: 24,
+    padding: 22,
+    minHeight: 200,
+    justifyContent: 'space-between',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 32,
+    elevation: 10,
+  },
+  liveChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+  },
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#4ade80',
+  },
+  liveText:    { color: 'rgba(255,255,255,0.8)', fontSize: 10, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
+  heroSubject: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5, lineHeight: 30 },
+  heroRoom:    { fontSize: 14, fontWeight: '500', marginTop: 6 },
+  heroFooter:  { marginTop: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  checkinBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 999,
+  },
+  checkinText: { fontWeight: '700', fontSize: 14 },
+  timeText:    { fontSize: 13, fontWeight: '600' },
+
+  statCard: {
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  statHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  statTitle:   { fontSize: 15, fontWeight: '800', letterSpacing: -0.3 },
+  statSub:     { fontSize: 11, fontWeight: '500', marginTop: 2 },
+  statIconBox: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  statBig:     { fontSize: 30, fontWeight: '900', letterSpacing: -1 },
+  progressBar: { height: 4, borderRadius: 2, marginTop: 12, overflow: 'hidden' },
+  progressFill:{ height: '100%', borderRadius: 2 },
+
+  /* Campus live */
+  campusCard: {
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  campusHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+  campusDot:    { width: 8, height: 8, borderRadius: 4 },
+  campusTitle:  { fontSize: 16, fontWeight: '800', flex: 1, letterSpacing: -0.3 },
+  campusLive:   { fontSize: 11, fontWeight: '600' },
+  campusRow:    { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  campusStat:   { flexDirection: 'row', alignItems: 'center', gap: 7, width: '47%' },
+  campusStatIcon:{ width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  campusStatText:{ fontSize: 12, fontWeight: '600', flex: 1 },
+
+  /* Banner */
+  banner: {
+    borderRadius: 20,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  bannerIcon:     { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  bannerEyebrow:  { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 3 },
+  bannerTitle:    { fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
+  bannerSub:      { fontSize: 12, marginTop: 2 },
+  bannerChevron:  { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+
+  /* Quote */
+  quoteCard: {
+    borderRadius: 24,
+    padding: 24,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 30,
+    elevation: 8,
+  },
+  quoteIconWrap:  { marginBottom: 12 },
+  quoteGlyph:     { fontSize: 36, color: 'rgba(255,255,255,0.2)', lineHeight: 36 },
+  quoteText:      { fontSize: 16, fontWeight: '600', lineHeight: 24, letterSpacing: -0.2 },
+  quoteAuthor:    { fontSize: 13, fontWeight: '600', marginTop: 14, fontStyle: 'italic' },
+  quoteTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    marginTop: 16,
+  },
+  quoteTagText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
+
+  /* Quick Actions */
+  quickCard: {
+    borderRadius: 20,
+    padding: 16,
+    minWidth: 130,
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  quickIcon:  { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  quickLabel: { fontSize: 13, fontWeight: '800', letterSpacing: -0.2 },
+  quickSub:   { fontSize: 11, marginTop: 3 },
+});
