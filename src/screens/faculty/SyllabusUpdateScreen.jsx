@@ -4,8 +4,10 @@ import { syllabusApi } from '../../api/syllabus.api';
 import { apiClient } from '../../api/client';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../hooks/ThemeContext';
 
 export default function SyllabusUpdateScreen() {
+  const { theme: T } = useTheme();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
@@ -91,48 +93,50 @@ export default function SyllabusUpdateScreen() {
     }
   };
 
-  if (loading) return <View className="flex-1 bg-surface justify-center items-center"><ActivityIndicator color="#6366f1" size="large" /></View>;
+  if (loading) return <View style={{ backgroundColor: T.bg }} className="flex-1 justify-center items-center"><ActivityIndicator color={T.accent} size="large" /></View>;
 
   return (
-    <ScrollView className="flex-1 bg-surface px-4 py-6">
+    <ScrollView style={{ backgroundColor: T.bg }} className="flex-1 px-4 py-6">
       <View className="flex-row items-center mb-6">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={24} color={T.text} />
         </TouchableOpacity>
-        <Text className="text-white text-2xl font-bold">My Syllabus Trackers</Text>
+        <Text style={{ color: T.text }} className="text-2xl font-bold">My Syllabus Trackers</Text>
       </View>
 
       {data?.map((tracker, i) => (
-        <View key={i} className="bg-card p-4 rounded-2xl border border-border mb-4">
+        <View key={i} style={{ backgroundColor: T.card, borderColor: T.border }} className="p-4 rounded-2xl border mb-4">
           <View className="flex-row justify-between mb-2">
-            <Text className="text-white font-bold flex-1">{tracker.subjectId.name} (Div {tracker.division})</Text>
-            <Text className="text-primary font-bold">{tracker.progress}%</Text>
+            <Text style={{ color: T.text }} className="font-bold flex-1">{tracker.subjectId.name} (Div {tracker.division})</Text>
+            <Text style={{ color: T.accent }} className="font-bold">{tracker.progress}%</Text>
           </View>
-          <View className="h-2 bg-surface rounded-full overflow-hidden mb-4">
-            <View className="h-full bg-primary" style={{ width: `${tracker.progress}%` }} />
+          <View style={{ backgroundColor: T.bg }} className="h-2 rounded-full overflow-hidden mb-4">
+            <View style={{ backgroundColor: T.accent, width: `${tracker.progress}%` }} className="h-full" />
           </View>
           
           <TouchableOpacity 
             onPress={() => fetchCoordinationNodes(tracker.subjectId._id, tracker.subjectId.name)}
-            className="flex-row items-center justify-center bg-primary/10 border border-primary/30 py-2 rounded-xl mb-4"
+            style={{ backgroundColor: `${T.accent}20`, borderColor: `${T.accent}50` }}
+            className="flex-row items-center justify-center border py-2 rounded-xl mb-4"
           >
-            <Ionicons name="git-network-outline" size={16} color="#818cf8" />
-            <Text className="text-primary font-bold text-xs ml-2">View Coordination Nodes</Text>
+            <Ionicons name="git-network-outline" size={16} color={T.accent} />
+            <Text style={{ color: T.accent }} className="font-bold text-xs ml-2">View Coordination Nodes</Text>
           </TouchableOpacity>
 
-          <View className="border-t border-border pt-4">
-            <Text className="text-white font-bold mb-2">Topics:</Text>
+          <View style={{ borderTopColor: T.border }} className="border-t pt-4">
+            <Text style={{ color: T.text }} className="font-bold mb-2">Topics:</Text>
             {tracker.topics.map(topic => (
-              <View key={topic._id} className="flex-row items-center justify-between py-2 border-b border-border/50">
+              <View key={topic._id} style={{ borderBottomColor: `${T.border}80` }} className="flex-row items-center justify-between py-2 border-b">
                 <View className="flex-1 mr-2">
-                  <Text className="text-slate-300">{topic.name}</Text>
-                  {topic.notes ? <Text className="text-muted text-xs italic mt-0.5">Note: {topic.notes}</Text> : null}
+                  <Text style={{ color: T.textSub }}>{topic.name}</Text>
+                  {topic.notes ? <Text style={{ color: T.muted }} className="text-xs italic mt-0.5">Note: {topic.notes}</Text> : null}
                 </View>
                 <TouchableOpacity 
                   onPress={() => openTopicUpdate(tracker._id, topic)}
-                  className={`px-3 py-1 rounded-full border ${topic.status === 'done' ? 'bg-success/20 border-success' : 'bg-surface border-border'}`}
+                  style={{ backgroundColor: topic.status === 'done' ? `${T.success}20` : T.bg, borderColor: topic.status === 'done' ? T.success : T.border }}
+                  className="px-3 py-1 rounded-full border"
                 >
-                  <Text className={`text-xs font-bold ${topic.status === 'done' ? 'text-success' : 'text-muted'}`}>
+                  <Text style={{ color: topic.status === 'done' ? T.success : T.muted }} className="text-xs font-bold">
                     {topic.status === 'done' ? 'DONE' : 'PENDING'}
                   </Text>
                 </TouchableOpacity>
@@ -143,24 +147,26 @@ export default function SyllabusUpdateScreen() {
       ))}
 
       <TouchableOpacity 
-        className="bg-primary/20 p-4 rounded-xl border border-primary/50 items-center border-dashed mt-4 mb-10"
+        style={{ backgroundColor: `${T.accent}20`, borderColor: `${T.accent}50` }}
+        className="p-4 rounded-xl border items-center border-dashed mt-4 mb-10"
         onPress={() => Alert.alert('Init', 'Trigger syllabusApi.initTracker')}
       >
-        <Text className="text-primary font-bold">+ Initialize New Subject Tracker</Text>
+        <Text style={{ color: T.accent }} className="font-bold">+ Initialize New Subject Tracker</Text>
       </TouchableOpacity>
 
       {/* Topic Update Modal */}
       <Modal visible={topicModalVisible} transparent animationType="slide">
         <View className="flex-1 justify-end bg-black/60">
-          <View className="bg-card rounded-t-3xl p-6">
-            <Text className="text-white text-xl font-bold mb-1">Update Topic</Text>
-            <Text className="text-muted text-sm mb-6">{selectedTopic?.name}</Text>
+          <View style={{ backgroundColor: T.card }} className="rounded-t-3xl p-6">
+            <Text style={{ color: T.text }} className="text-xl font-bold mb-1">Update Topic</Text>
+            <Text style={{ color: T.muted }} className="text-sm mb-6">{selectedTopic?.name}</Text>
 
-            <Text className="text-white font-bold mb-2">Coordination Notes</Text>
+            <Text style={{ color: T.text }} className="font-bold mb-2">Coordination Notes</Text>
             <TextInput
-              className="bg-surface text-white p-3 rounded-xl border border-border mb-6 min-h-[80px]"
+              style={{ backgroundColor: T.bg, color: T.text, borderColor: T.border }}
+              className="p-3 rounded-xl border mb-6 min-h-[80px]"
               placeholder="Leave notes for other faculty (e.g. Extra assignment given)" 
-              placeholderTextColor="#64748b"
+              placeholderTextColor={T.muted}
               multiline
               textAlignVertical="top"
               value={topicNotes} 
@@ -168,16 +174,16 @@ export default function SyllabusUpdateScreen() {
             />
 
             <View className="flex-row gap-3">
-              <TouchableOpacity onPress={() => submitTopicUpdate('pending')} disabled={updatingTopic} className="flex-1 bg-surface p-4 rounded-xl border border-border items-center">
-                <Text className="text-white font-bold">Mark Pending</Text>
+              <TouchableOpacity onPress={() => submitTopicUpdate('pending')} disabled={updatingTopic} style={{ backgroundColor: T.bg, borderColor: T.border }} className="flex-1 p-4 rounded-xl border items-center">
+                <Text style={{ color: T.text }} className="font-bold">Mark Pending</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => submitTopicUpdate('done')} disabled={updatingTopic} className="flex-1 bg-success p-4 rounded-xl items-center">
-                {updatingTopic ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold">Mark Done</Text>}
+              <TouchableOpacity onPress={() => submitTopicUpdate('done')} disabled={updatingTopic} style={{ backgroundColor: T.success }} className="flex-1 p-4 rounded-xl items-center">
+                {updatingTopic ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-bold">Mark Done</Text>}
               </TouchableOpacity>
             </View>
             
             <TouchableOpacity onPress={() => setTopicModalVisible(false)} className="mt-4 p-4 rounded-xl items-center">
-              <Text className="text-muted font-bold">Cancel</Text>
+              <Text style={{ color: T.muted }} className="font-bold">Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -185,43 +191,43 @@ export default function SyllabusUpdateScreen() {
 
       {/* Coordination Nodes Modal */}
       <Modal visible={coordModalVisible} animationType="slide">
-        <View className="flex-1 bg-surface">
-          <View className="flex-row justify-between items-center p-4 pt-12 border-b border-border bg-card">
+        <View style={{ backgroundColor: T.bg }} className="flex-1">
+          <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1 }} className="flex-row justify-between items-center p-4 pt-12">
             <View>
-              <Text className="text-white text-xl font-bold">Coordination Nodes</Text>
-              <Text className="text-primary text-xs">{activeSubject}</Text>
+              <Text style={{ color: T.text }} className="text-xl font-bold">Coordination Nodes</Text>
+              <Text style={{ color: T.accent }} className="text-xs">{activeSubject}</Text>
             </View>
-            <TouchableOpacity onPress={() => setCoordModalVisible(false)} className="p-2 bg-surface rounded-full">
-              <Ionicons name="close" size={24} color="#f1f5f9" />
+            <TouchableOpacity onPress={() => setCoordModalVisible(false)} style={{ backgroundColor: T.bg }} className="p-2 rounded-full">
+              <Ionicons name="close" size={24} color={T.text} />
             </TouchableOpacity>
           </View>
           
           <ScrollView className="flex-1 p-4">
             {coordLoading ? (
-              <ActivityIndicator color="#6366f1" size="large" className="mt-10" />
+              <ActivityIndicator color={T.accent} size="large" className="mt-10" />
             ) : coordNodes.length === 0 ? (
-              <Text className="text-muted text-center mt-10">No coordination data available.</Text>
+              <Text style={{ color: T.muted }} className="text-center mt-10">No coordination data available.</Text>
             ) : (
               coordNodes.map(node => (
-                <View key={node._id} className="bg-card p-4 rounded-2xl border border-border mb-4">
+                <View key={node._id} style={{ backgroundColor: T.card, borderColor: T.border }} className="p-4 rounded-2xl border mb-4">
                   <View className="flex-row justify-between items-center mb-2">
                     <View>
-                      <Text className="text-white font-bold text-lg">{node.facultyId?.name}</Text>
-                      <Text className="text-muted text-xs">Div {node.division || 'All'}</Text>
+                      <Text style={{ color: T.text }} className="font-bold text-lg">{node.facultyId?.name}</Text>
+                      <Text style={{ color: T.muted }} className="text-xs">Div {node.division || 'All'}</Text>
                     </View>
-                    <View className="bg-primary/20 px-3 py-1 rounded-lg border border-primary/50">
-                      <Text className="text-primary font-bold">{node.completionPercent}%</Text>
+                    <View style={{ backgroundColor: `${T.accent}20`, borderColor: `${T.accent}50` }} className="px-3 py-1 rounded-lg border">
+                      <Text style={{ color: T.accent }} className="font-bold">{node.completionPercent}%</Text>
                     </View>
                   </View>
                   
                   <View className="mt-2">
                     {node.topics.filter(t => t.notes).length === 0 ? (
-                      <Text className="text-muted text-xs italic">No notes provided.</Text>
+                      <Text style={{ color: T.muted }} className="text-xs italic">No notes provided.</Text>
                     ) : (
                       node.topics.filter(t => t.notes).map(topic => (
-                        <View key={topic._id} className="bg-surface p-3 rounded-xl mb-2 border border-border">
-                          <Text className="text-slate-300 text-xs font-bold mb-1">{topic.name}</Text>
-                          <Text className="text-white text-sm">{topic.notes}</Text>
+                        <View key={topic._id} style={{ backgroundColor: T.bg, borderColor: T.border }} className="p-3 rounded-xl mb-2 border">
+                          <Text style={{ color: T.textSub }} className="text-xs font-bold mb-1">{topic.name}</Text>
+                          <Text style={{ color: T.text }} className="text-sm">{topic.notes}</Text>
                         </View>
                       ))
                     )}

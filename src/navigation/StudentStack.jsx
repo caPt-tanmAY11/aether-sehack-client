@@ -16,7 +16,11 @@ import MiniAppMarketplaceScreen from '../screens/student/MiniAppMarketplaceScree
 import MiniAppShellScreen from '../screens/student/MiniAppShellScreen';
 import MyDuesScreen from '../screens/student/MyDuesScreen';
 import MiniAppDeveloperPortalScreen from '../screens/student/MiniAppDeveloperPortalScreen';
-
+import BatchesScreen from '../screens/student/BatchesScreen';
+import TimetableScreen from '../screens/student/TimetableScreen';
+import AttendanceScreen from '../screens/student/AttendanceScreen';
+import SyllabusScreen from '../screens/student/SyllabusScreen';
+import IssuesScreen from '../screens/student/IssuesScreen';
 const Stack = createStackNavigator();
 
 export default function StudentStack() {
@@ -42,6 +46,11 @@ export default function StudentStack() {
       <Stack.Screen name="MiniAppShell" component={MiniAppShellScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="MiniAppDeveloperPortal" component={MiniAppDeveloperPortalScreen} options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="MyDues" component={MyDuesScreen} />
+      <Stack.Screen name="Batches" component={BatchesScreen} />
+      <Stack.Screen name="Timetable" component={TimetableScreen} />
+      <Stack.Screen name="Attendance" component={AttendanceScreen} />
+      <Stack.Screen name="Syllabus" component={SyllabusScreen} />
+      <Stack.Screen name="Issues" component={IssuesScreen} />
     </Stack.Navigator>
   );
 }

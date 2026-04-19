@@ -3,8 +3,10 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Tex
 import { Ionicons } from '@expo/vector-icons';
 import { leaveApi } from '../../api/leave.api';
 import { handleViewPdf } from '../../utils/pdf';
+import { useTheme } from '../../hooks/ThemeContext';
 
 export default function LeaveScreen({ navigation }) {
+  const { theme: T } = useTheme();
   const [activeTab, setActiveTab] = useState('history'); // 'history' or 'apply'
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,93 +53,102 @@ export default function LeaveScreen({ navigation }) {
   };
 
   return (
-    <View className="flex-1 bg-surface">
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border">
-        <Text className="text-white text-xl font-bold">Leave Management</Text>
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
+      <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1 }} className="px-4 pt-12 pb-4">
+        <Text style={{ color: T.text }} className="text-xl font-bold">Leave Management</Text>
       </View>
 
-      <View className="flex-row mx-4 mt-4 mb-2 bg-card rounded-xl p-1 border border-border">
+      <View style={{ backgroundColor: T.card, borderColor: T.border }} className="flex-row mx-4 mt-4 mb-2 rounded-xl p-1 border">
         <TouchableOpacity 
           onPress={() => setActiveTab('history')}
-          className={`flex-1 py-2 items-center rounded-lg ${activeTab === 'history' ? 'bg-primary' : 'bg-transparent'}`}
+          style={{ backgroundColor: activeTab === 'history' ? T.accent : 'transparent' }}
+          className="flex-1 py-2 items-center rounded-lg"
         >
-          <Text className={activeTab === 'history' ? 'text-white font-bold' : 'text-muted font-bold'}>My History</Text>
+          <Text style={{ color: activeTab === 'history' ? '#ffffff' : T.muted }} className="font-bold">My History</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={() => setActiveTab('apply')}
-          className={`flex-1 py-2 items-center rounded-lg ${activeTab === 'apply' ? 'bg-primary' : 'bg-transparent'}`}
+          style={{ backgroundColor: activeTab === 'apply' ? T.accent : 'transparent' }}
+          className="flex-1 py-2 items-center rounded-lg"
         >
-          <Text className={activeTab === 'apply' ? 'text-white font-bold' : 'text-muted font-bold'}>Apply</Text>
+          <Text style={{ color: activeTab === 'apply' ? '#ffffff' : T.muted }} className="font-bold">Apply</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView className="p-4 flex-1">
         {activeTab === 'history' ? (
           loading ? (
-            <ActivityIndicator color="#6366f1" size="large" className="mt-10" />
+            <ActivityIndicator color={T.accent} size="large" className="mt-10" />
           ) : leaves.length === 0 ? (
-            <View className="items-center mt-10"><Text className="text-muted text-lg">No leave requests found.</Text></View>
+            <View className="items-center mt-10"><Text style={{ color: T.muted }} className="text-lg">No leave requests found.</Text></View>
           ) : (
-            leaves.map(leave => (
-              <View key={leave._id} className="bg-card p-4 rounded-2xl border border-border mb-4">
-                <View className="flex-row justify-between mb-2 items-center">
-                  <View className="flex-1">
-                    <Text className="text-white text-lg font-bold capitalize">{leave.leaveType} Leave</Text>
-                    <View className={`px-2 py-1 rounded-md border mt-1 self-start ${leave.status === 'approved' ? 'bg-success/20 border-success/50' : leave.status === 'rejected' ? 'bg-error/20 border-error/50' : 'bg-warning/20 border-warning/50'}`}>
-                      <Text className={`${leave.status === 'approved' ? 'text-success' : leave.status === 'rejected' ? 'text-error' : 'text-warning'} text-xs font-bold capitalize`}>{leave.status}</Text>
+            leaves.map(leave => {
+              const sColor = leave.status === 'approved' ? T.success : leave.status === 'rejected' ? T.error : T.warning;
+              return (
+                <View key={leave._id} style={{ backgroundColor: T.card, borderColor: T.border }} className="p-4 rounded-2xl border mb-4">
+                  <View className="flex-row justify-between mb-2 items-center">
+                    <View className="flex-1">
+                      <Text style={{ color: T.text }} className="text-lg font-bold capitalize">{leave.leaveType} Leave</Text>
+                      <View style={{ backgroundColor: `${sColor}20`, borderColor: `${sColor}50` }} className="px-2 py-1 rounded-md border mt-1 self-start">
+                        <Text style={{ color: sColor }} className="text-xs font-bold capitalize">{leave.status}</Text>
+                      </View>
                     </View>
+                    <TouchableOpacity onPress={() => {
+                      handleViewPdf(`/leave/faculty/${leave._id}/pdf`, `Faculty_Leave_${leave._id}`).catch(err => Alert.alert('Error', err.message));
+                    }} style={{ backgroundColor: T.bg, borderColor: T.border }} className="p-2 rounded-full border ml-2">
+                      <Ionicons name="document-text-outline" size={20} color={T.accent} />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity onPress={() => {
-                    handleViewPdf(`/leave/faculty/${leave._id}/pdf`, `Faculty_Leave_${leave._id}`).catch(err => Alert.alert('Error', err.message));
-                  }} className="p-2 bg-surface rounded-full border border-border ml-2">
-                    <Ionicons name="document-text-outline" size={20} color="#818cf8" />
-                  </TouchableOpacity>
+                  <Text style={{ color: T.muted }} className="text-xs mb-3">
+                    {new Date(leave.fromDate).toLocaleDateString()} to {new Date(leave.toDate).toLocaleDateString()}
+                  </Text>
+                  <Text style={{ color: T.textSub }}>{leave.reason}</Text>
+                  {leave.hodRemarks && (
+                    <View style={{ backgroundColor: T.bg, borderColor: T.border }} className="mt-3 p-3 rounded-xl border">
+                      <Text style={{ color: T.muted }} className="text-xs font-bold mb-1">HOD Remarks:</Text>
+                      <Text style={{ color: T.textSub }} className="text-sm">{leave.hodRemarks}</Text>
+                    </View>
+                  )}
                 </View>
-                <Text className="text-muted text-xs mb-3">
-                  {new Date(leave.fromDate).toLocaleDateString()} to {new Date(leave.toDate).toLocaleDateString()}
-                </Text>
-                <Text className="text-slate-300">{leave.reason}</Text>
-                {leave.hodRemarks && (
-                  <View className="mt-3 p-3 bg-surface rounded-xl border border-border">
-                    <Text className="text-muted text-xs font-bold mb-1">HOD Remarks:</Text>
-                    <Text className="text-slate-400 text-sm">{leave.hodRemarks}</Text>
-                  </View>
-                )}
-              </View>
-            ))
+              );
+            })
           )
         ) : (
-          <View className="bg-card p-4 rounded-2xl border border-border mb-8">
-            <Text className="text-muted text-sm font-bold mb-2">Leave Type (casual, medical, earned, duty, maternity, paternity, unpaid)</Text>
+          <View style={{ backgroundColor: T.card, borderColor: T.border }} className="p-4 rounded-2xl border mb-8">
+            <Text style={{ color: T.muted }} className="text-sm font-bold mb-2">Leave Type (casual, medical, earned, duty, maternity, paternity, unpaid)</Text>
             <TextInput
-              className="bg-surface text-white p-3 rounded-xl border border-border mb-4 capitalize"
+              style={{ backgroundColor: T.bg, color: T.text, borderColor: T.border }}
+              className="p-3 rounded-xl border mb-4 capitalize"
               value={leaveType}
               onChangeText={setLeaveType}
             />
 
-            <Text className="text-muted text-sm font-bold mb-2">Start Date (YYYY-MM-DD)</Text>
+            <Text style={{ color: T.muted }} className="text-sm font-bold mb-2">Start Date (YYYY-MM-DD)</Text>
             <TextInput
-              className="bg-surface text-white p-3 rounded-xl border border-border mb-4"
+              style={{ backgroundColor: T.bg, color: T.text, borderColor: T.border }}
+              className="p-3 rounded-xl border mb-4"
               placeholder="2026-10-15"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={T.muted}
               value={startDate}
               onChangeText={setStartDate}
             />
 
-            <Text className="text-muted text-sm font-bold mb-2">End Date (YYYY-MM-DD)</Text>
+            <Text style={{ color: T.muted }} className="text-sm font-bold mb-2">End Date (YYYY-MM-DD)</Text>
             <TextInput
-              className="bg-surface text-white p-3 rounded-xl border border-border mb-4"
+              style={{ backgroundColor: T.bg, color: T.text, borderColor: T.border }}
+              className="p-3 rounded-xl border mb-4"
               placeholder="2026-10-16"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={T.muted}
               value={endDate}
               onChangeText={setEndDate}
             />
 
-            <Text className="text-muted text-sm font-bold mb-2">Reason</Text>
+            <Text style={{ color: T.muted }} className="text-sm font-bold mb-2">Reason</Text>
             <TextInput
-              className="bg-surface text-white p-3 rounded-xl border border-border mb-6 h-24"
+              style={{ backgroundColor: T.bg, color: T.text, borderColor: T.border }}
+              className="p-3 rounded-xl border mb-6 h-24"
               placeholder="Details..."
-              placeholderTextColor="#64748b"
+              placeholderTextColor={T.muted}
               value={reason}
               onChangeText={setReason}
               multiline
@@ -147,9 +158,10 @@ export default function LeaveScreen({ navigation }) {
             <TouchableOpacity 
               onPress={handleApply}
               disabled={loading}
-              className="bg-primary p-4 rounded-xl flex-row justify-center items-center"
+              style={{ backgroundColor: T.accent }}
+              className="p-4 rounded-xl flex-row justify-center items-center"
             >
-              {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">Submit Request</Text>}
+              {loading ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-bold text-lg">Submit Request</Text>}
             </TouchableOpacity>
           </View>
         )}

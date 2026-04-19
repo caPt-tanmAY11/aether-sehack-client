@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { timetableApi } from '../../api/timetable.api';
 import WeekView from '../../components/timetable/WeekView';
+import { useTheme } from '../../hooks/ThemeContext';
+import AppHeader from '../../components/AppHeader';
 
 export default function TimetableScreen() {
+  const { theme: T } = useTheme();
   const [timetable, setTimetable] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchTimetable();
-  }, []);
+  useEffect(() => { fetchTimetable(); }, []);
 
   const fetchTimetable = async () => {
     try {
@@ -27,20 +28,33 @@ export default function TimetableScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-surface justify-center items-center">
-        <ActivityIndicator size="large" color="#6366f1" />
+      <View style={[s.center, { backgroundColor: T.bg }]}>
+        <ActivityIndicator size="large" color={T.accent} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-surface pt-4">
+    <View style={[s.root, { backgroundColor: T.bg }]}>
+      <AppHeader title="My Timetable" showBack={false} />
       {error && (
-        <View className="mx-4 mb-4 bg-error/20 p-3 rounded-lg border border-error/50">
-          <Text className="text-error text-center">{error}</Text>
+        <View style={[s.errorBox, { backgroundColor: T.errorSoft, borderColor: T.error }]}>
+          <Text style={[s.errorText, { color: T.error }]}>{error}</Text>
         </View>
       )}
       <WeekView timetable={timetable} />
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  root:     { flex: 1 },
+  center:   { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errorBox: {
+    margin: 16,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  errorText: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
+});

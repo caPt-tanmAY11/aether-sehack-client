@@ -42,6 +42,8 @@ function getTodayQuote() {
   return QUOTES[idx];
 }
 
+const TODAY_NAME = new Date().toLocaleDateString('en-US', { weekday: 'long' }); // e.g. "Monday"
+
 /* ─── Component ─────────────────────────────────────────── */
 export default function HomeScreen() {
   const user          = useAuthStore(s => s.user);
@@ -55,17 +57,36 @@ export default function HomeScreen() {
   const [nextClass,    setNextClass]    = useState(null);
   const [loading,      setLoading]      = useState(true);
   const [outstanding,  setOutstanding]  = useState({ totalRupees: '0.00', count: 0 });
+  const [todaySlots,   setTodaySlots]   = useState([]);
+  const [allSlots,     setAllSlots]     = useState([]);
+  const [selectedDay,  setSelectedDay]  = useState(TODAY_NAME);
 
   const fetchDashboardData = async () => {
     try {
-      const [attRes, classRes, duesRes] = await Promise.all([
+      const [attRes, classRes, duesRes, ttRes] = await Promise.all([
         attendanceApi.getReport().catch(() => null),
         timetableApi.getNextClass().catch(() => null),
         paymentsApi.getOutstanding().catch(() => null),
+        timetableApi.getMyTimetable().catch(() => null),
       ]);
       setAttendance(attRes);
       setNextClass(classRes);
       if (duesRes) setOutstanding(duesRes);
+      if (ttRes?.slots) {
+        // Store full week data
+        setAllSlots(ttRes.slots);
+        const slots = ttRes.slots
+          .filter(s => {
+            const slotDay = (s.day || '').toLowerCase();
+            const todayDay = TODAY_NAME.toLowerCase();
+            return slotDay === todayDay;
+          })
+          .sort((a, b) => a.startTime.localeCompare(b.startTime));
+        setTodaySlots(slots);
+      } else {
+        setAllSlots([]);
+        setTodaySlots([]);
+      }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -107,8 +128,8 @@ export default function HomeScreen() {
             <Text style={[s.avatarText, { color: T.accent }]}>{initials}</Text>
           </TouchableOpacity>
           <View>
-            <Text style={[s.brand, { color: T.text }]}>Aether</Text>
-            <Text style={[s.subBrand, { color: T.muted }]}>Campus OS</Text>
+            <Text style={[s.heyText, { color: T.muted }]}>Hey, <Text style={{ color: T.accent, fontWeight: '900' }}>{user?.name || 'Student'}</Text></Text>
+            <Text style={[s.subBrand, { color: T.muted }]}>Central Hub</Text>
           </View>
         </View>
         <View style={s.headerRight}>
@@ -136,7 +157,7 @@ export default function HomeScreen() {
         <View style={{ marginBottom: 6 }}>
           <Text style={[s.dateStr, { color: T.muted }]}>{dateStr}</Text>
           <Text style={[s.eyebrow, { color: T.accent }]}>
-            {greeting.icon}  {greeting.text}, {user?.name?.split(' ')[0] || 'Student'}
+            {greeting.icon}  {greeting.text}, {user?.name || 'Student'}
           </Text>
           <Text style={[s.heroTitle, { color: T.text }]}>
             The Campus is{' '}
@@ -144,40 +165,195 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        {/* ── Week Strip ───────────────────────────────────── */}
-        <View style={[s.weekStrip, { backgroundColor: T.card, borderColor: T.border }]}>
-          {WEEK_DAYS.map((d, i) => {
-            const isToday   = i === weekDay;
-            const isPast    = weekDay >= 0 && i < weekDay;
-            const isFuture  = weekDay === -1 || i > weekDay;
-            return (
-              <View key={d} style={s.weekDay}>
-                <View style={[
-                  s.weekDot,
-                  { backgroundColor: isToday ? T.accent : isPast ? T.accentSoft : T.iconBg },
-                ]}>
-                  {isToday && <View style={[s.weekDotInner, { backgroundColor: '#ffffff' }]} />}
-                  {isPast  && <Ionicons name="checkmark" size={10} color={T.accent} />}
-                </View>
-                <Text style={[
-                  s.weekLabel,
-                  { color: isToday ? T.accent : isFuture ? T.muted : T.textSub },
-                  isToday && { fontWeight: '900' },
-                ]}>{d}</Text>
-              </View>
-            );
-          })}
-          <View style={[s.weekDivider, { backgroundColor: T.border }]} />
-          <View style={s.weekInfo}>
-            <Text style={[s.weekInfoText, { color: T.muted }]}>
-              {weekDay === -1 ? 'Weekend · Rest up! 🎉' : `Day ${weekDay + 1} of 5 this week`}
-            </Text>
-          </View>
-        </View>
+        {/* ── NEUBRUTALISM TIMETABLE CALENDAR ──────────── */}
+        {(() => {
+          // All full-week day names the backend uses
+          const DAYS_FULL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const DAYS_SHORT = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
+          // Slots for the currently selected day
+          const visibleSlots = allSlots
+            .filter(s => (s.day || '').toLowerCase() === selectedDay.toLowerCase())
+            .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+          // Next lecture from today's slots (first slot after current time)
+          const now = new Date();
+          const nowMin = now.getHours() * 60 + now.getMinutes();
+          const nextLecture = todaySlots.find(slot => {
+            const [hh, mm] = (slot.startTime || '00:00').split(':').map(Number);
+            return hh * 60 + mm > nowMin;
+          });
+
+          return (
+            <View style={{ marginBottom: 18 }}>
+              {/* ── Brutal Header Bar */}
+              <View style={[s.brutalHeader, { borderColor: T.text, backgroundColor: T.accent }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="calendar" size={14} color="#fff" />
+                  <Text style={s.brutalHeaderText}>WEEKLY TIMETABLE</Text>
+                </View>
+                <TouchableOpacity onPress={() => navigation.navigate('Timetable')} activeOpacity={0.7}>
+                  <Text style={s.brutalHeaderLink}>FULL VIEW →</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* ── Day Selector Tabs */}
+              <View style={[s.brutalDayBar, { backgroundColor: T.card, borderColor: T.text }]}>
+                {DAYS_FULL.map((day, i) => {
+                  const isSelected = selectedDay === day;
+                  const isToday = day === TODAY_NAME;
+                  const daySlotCount = allSlots.filter(s => (s.day || '').toLowerCase() === day.toLowerCase()).length;
+                  return (
+                    <TouchableOpacity
+                      key={day}
+                      onPress={() => setSelectedDay(day)}
+                      style={[
+                        s.brutalDayTab,
+                        {
+                          backgroundColor: isSelected ? T.text : 'transparent',
+                          borderRightWidth: i < DAYS_FULL.length - 1 ? 2 : 0,
+                          borderRightColor: T.text,
+                        }
+                      ]}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[s.brutalDayTabText, { color: isSelected ? (T.mode === 'dark' ? '#0b1120' : '#f7f9fb') : isToday ? T.accent : T.muted }]}>
+                        {DAYS_SHORT[i]}
+                      </Text>
+                      {daySlotCount > 0 && (
+                        <View style={[s.brutalDayDot, { backgroundColor: isSelected ? T.accent : T.accent }]} />
+                      )}
+                      {isToday && !isSelected && (
+                        <Text style={{ fontSize: 6, color: T.accent, fontWeight: '900', letterSpacing: 1 }}>NOW</Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* ── Slots for selected day */}
+              {visibleSlots.length === 0 ? (
+                <View style={[s.brutalEmpty, { backgroundColor: T.card, borderColor: T.text }]}>
+                  <Text style={{ fontSize: 24, marginBottom: 6 }}>📭</Text>
+                  <Text style={[s.brutalEmptyTitle, { color: T.text }]}>NO CLASSES</Text>
+                  <Text style={[s.brutalEmptySub, { color: T.muted }]}>{selectedDay} is free</Text>
+                </View>
+              ) : (
+                <View style={[s.brutalSlotList, { borderColor: T.text, backgroundColor: T.card }]}>
+                  {visibleSlots.map((slot, i) => {
+                    const [hh, mm] = (slot.startTime || '00:00').split(':').map(Number);
+                    const slotMin = hh * 60 + mm;
+                    const [eh, em] = (slot.endTime || slot.startTime || '00:00').split(':').map(Number);
+                    const endMin = eh * 60 + em;
+                    const isNow = selectedDay === TODAY_NAME && nowMin >= slotMin && nowMin < endMin;
+                    const isDone = selectedDay === TODAY_NAME && nowMin >= endMin;
+
+                    return (
+                      <View
+                        key={i}
+                        style={[
+                          s.brutalSlotRow,
+                          {
+                            borderBottomColor: T.text,
+                            borderBottomWidth: i < visibleSlots.length - 1 ? 2 : 0,
+                            backgroundColor: isNow ? `${T.accent}15` : 'transparent',
+                          }
+                        ]}
+                      >
+                        {/* Time column */}
+                        <View style={[s.brutalSlotTimeCol, { borderRightColor: T.text }]}>
+                          <Text style={[s.brutalSlotTimeText, { color: isNow ? T.accent : isDone ? T.muted : T.text }]}>
+                            {slot.startTime}
+                          </Text>
+                          {slot.endTime && (
+                            <Text style={{ fontSize: 9, color: T.muted, fontWeight: '700' }}>{slot.endTime}</Text>
+                          )}
+                        </View>
+
+                        {/* Content column */}
+                        <View style={{ flex: 1, paddingVertical: 10, paddingHorizontal: 12 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '900', color: isDone ? T.muted : T.text, letterSpacing: -0.2 }} numberOfLines={1}>
+                            {slot.subjectId?.name || slot.subject?.name || 'Class'}
+                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                            <Ionicons name="location-outline" size={10} color={T.muted} />
+                            <Text style={{ fontSize: 11, color: T.muted, fontWeight: '700' }}>
+                              {slot.roomId?.name || slot.room?.name || 'TBA'}
+                            </Text>
+                            {slot.facultyId?.name && (
+                              <>
+                                <Text style={{ color: T.muted, fontSize: 10 }}>·</Text>
+                                <Ionicons name="person-outline" size={10} color={T.muted} />
+                                <Text style={{ fontSize: 11, color: T.muted, fontWeight: '600' }} numberOfLines={1}>
+                                  {slot.facultyId.name.split(' ').slice(-1)[0]}
+                                </Text>
+                              </>
+                            )}
+                          </View>
+                        </View>
+
+                        {/* Status pill */}
+                        <View style={{ justifyContent: 'center', paddingRight: 12 }}>
+                          {isNow && (
+                            <View style={[s.brutalNowPill, { backgroundColor: T.accent }]}>
+                              <Text style={s.brutalNowText}>LIVE</Text>
+                            </View>
+                          )}
+                          {isDone && (
+                            <Ionicons name="checkmark-circle" size={18} color={T.muted} />
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* ── Next Lecture Banner (today only) */}
+              {nextLecture && selectedDay === TODAY_NAME && (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Timetable')}
+                  style={[s.brutalNextCard, { borderColor: T.text, backgroundColor: T.heroCardBg }]}
+                  activeOpacity={0.85}
+                >
+                  <View style={[s.brutalNextLabel, { backgroundColor: T.accent }]}>
+                    <Text style={s.brutalNextLabelText}>NEXT LECTURE</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.5 }} numberOfLines={1}>
+                        {nextLecture.subjectId?.name || nextLecture.subject?.name || 'Class'}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Ionicons name="time-outline" size={12} color="rgba(255,255,255,0.7)" />
+                          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '800' }}>
+                            {nextLecture.startTime}{nextLecture.endTime ? ` – ${nextLecture.endTime}` : ''}
+                          </Text>
+                        </View>
+                        <Text style={{ color: 'rgba(255,255,255,0.4)' }}>|</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.7)" />
+                          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '800' }}>
+                            {nextLecture.roomId?.name || nextLecture.room?.name || 'TBA'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View style={[s.brutalNextArrow, { borderColor: 'rgba(255,255,255,0.3)' }]}>
+                      <Ionicons name="arrow-forward" size={16} color="#fff" />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        })()}
+
+        {/* ── Stats, Campus, Banner, Quote ────────────── */}
         <View style={{ gap: 14 }}>
 
-          {/* ── Next Class Hero ──────────────────────────── */}
+          {/* ── Next Class Hero ───────────────────── */}
           {nextClass ? (
             <TouchableOpacity
               onPress={() => navigation.navigate('Timetable')}
@@ -193,22 +369,15 @@ export default function HomeScreen() {
                 <Text style={[s.heroRoom, { color: T.heroCardMuted }]}>{nextClass.room?.name || 'Room TBA'}</Text>
               </View>
               <View style={s.heroFooter}>
-                <TouchableOpacity style={[s.checkinBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.12)' }]}>
-                  <Text style={[s.checkinText, { color: T.heroCardText }]}>Check-in</Text>
+                <View style={[s.checkinBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.12)' }]}>
+                  <Text style={[s.checkinText, { color: T.heroCardText }]}>Check-in when ready</Text>
                   <Ionicons name="arrow-forward" size={13} color={T.heroCardText} />
-                </TouchableOpacity>
+                </View>
                 <Text style={[s.timeText, { color: T.heroCardMuted }]}>{nextClass.startTime}</Text>
               </View>
             </TouchableOpacity>
-          ) : (
-            <View style={[s.heroCard, { backgroundColor: T.heroCardBg, justifyContent: 'center', alignItems: 'center', minHeight: 140 }]}>
-              <Ionicons name="cafe-outline" size={30} color="rgba(255,255,255,0.3)" style={{ marginBottom: 10 }} />
-              <Text style={[s.heroSubject, { color: T.heroCardText }]}>No Upcoming Classes</Text>
-              <Text style={[s.heroRoom, { color: T.heroCardMuted }]}>Enjoy your free time!</Text>
-            </View>
-          )}
+          ) : null}
 
-          {/* ── Stats Row ────────────────────────────────── */}
           <View style={{ flexDirection: 'row', gap: 14 }}>
 
             {/* Attendance */}
@@ -375,6 +544,7 @@ const s = StyleSheet.create({
     borderWidth: 2,
   },
   avatarText:  { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
+  heyText:     { fontSize: 15, fontWeight: '600' },
   brand:       { fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
   subBrand:    { fontSize: 9,  fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 1 },
   iconBtn: {
@@ -544,6 +714,120 @@ const s = StyleSheet.create({
     marginTop: 16,
   },
   quoteTagText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
+
+  /* New Brutalism timetable */
+  brutalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderWidth: 2,
+    marginBottom: -2,
+  },
+  brutalHeaderText: { color: '#fff', fontWeight: '900', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' },
+  brutalHeaderLink: { color: '#fff', fontWeight: '900', fontSize: 11, letterSpacing: 1 },
+  brutalSlot: {
+    padding: 14,
+    width: 130,
+    borderWidth: 2,
+    // sharp corners — New Brutalism
+    borderRadius: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.9,
+    shadowRadius: 0,
+    elevation: 6,
+  },
+  brutalSlotTime:    { fontSize: 10, fontWeight: '900', letterSpacing: 1, marginBottom: 6, textTransform: 'uppercase' },
+  brutalSlotSubject: { fontSize: 14, fontWeight: '900', letterSpacing: -0.3, lineHeight: 18, marginBottom: 6 },
+  brutalSlotRoom:    { fontSize: 10, fontWeight: '700' },
+
+  brutalEmpty: {
+    borderWidth: 2, borderTopWidth: 0,
+    padding: 24, alignItems: 'center',
+    borderRadius: 0,
+  },
+  brutalEmptyIcon:  { fontSize: 32, marginBottom: 8 },
+  brutalEmptyTitle: { fontSize: 12, fontWeight: '900', letterSpacing: 2, marginBottom: 4 },
+  brutalEmptySub:   { fontSize: 11, fontWeight: '600', textAlign: 'center' },
+
+  /* Brutal calendar day tabs */
+  brutalDayBar: {
+    flexDirection: 'row',
+    borderWidth: 2, borderTopWidth: 0,
+    borderRadius: 0,
+    overflow: 'hidden',
+  },
+  brutalDayTab: {
+    flex: 1, paddingVertical: 10,
+    alignItems: 'center', justifyContent: 'center',
+    gap: 3,
+  },
+  brutalDayTabText: { fontSize: 9, fontWeight: '900', letterSpacing: 1.5 },
+  brutalDayDot: { width: 4, height: 4, borderRadius: 0 },
+
+  /* Brutal slot list (vertical) */
+  brutalSlotList: {
+    borderWidth: 2, borderTopWidth: 0,
+    borderRadius: 0,
+  },
+  brutalSlotRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 56,
+  },
+  brutalSlotTimeCol: {
+    width: 58,
+    borderRightWidth: 2,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brutalSlotTimeText: { fontSize: 12, fontWeight: '900', letterSpacing: 0.5 },
+
+  /* Brutal status pills */
+  brutalNowPill: {
+    paddingHorizontal: 7, paddingVertical: 3,
+    borderRadius: 0,
+  },
+  brutalNowText: { fontSize: 8, fontWeight: '900', color: '#fff', letterSpacing: 1.5 },
+
+  /* Brutal next lecture card */
+  brutalNextCard: {
+    borderWidth: 2, borderTopWidth: 0,
+    borderRadius: 0,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.5, shadowRadius: 0, elevation: 6,
+  },
+  brutalNextLabel: {
+    paddingHorizontal: 14, paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center',
+  },
+  brutalNextLabelText: { color: '#fff', fontSize: 9, fontWeight: '900', letterSpacing: 2 },
+  brutalNextArrow: {
+    width: 36, height: 36,
+    borderRadius: 0, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+
+  slotCard: {
+    borderRadius: 18,
+    padding: 14,
+    width: 130,
+    borderWidth: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 0,
+    elevation: 3,
+  },
+  slotDot:     { width: 8, height: 8, borderRadius: 4, marginBottom: 8 },
+  slotTime:    { fontSize: 11, fontWeight: '900', letterSpacing: 0.3, marginBottom: 6 },
+  slotSubject: { fontSize: 13, fontWeight: '900', letterSpacing: -0.2, lineHeight: 17, marginBottom: 6 },
+  slotRoom:    { fontSize: 10, fontWeight: '600' },
 
   /* Quick Actions */
   quickCard: {

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { paymentsApi } from '../../api/payments.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import RazorpayCheckout from 'react-native-razorpay';
 import { useAuthStore } from '../../store/auth.store';
+import { useTheme } from '../../hooks/ThemeContext';
 
 const TYPE_CONFIG = {
   library: { icon: 'library',     color: '#3b82f6', label: 'Library Fine' },
@@ -22,6 +23,7 @@ const STATUS_STYLE = {
 export default function MyDuesScreen() {
   const navigation = useNavigation();
   const user = useAuthStore(state => state.user);
+  const { theme: T } = useTheme();
 
   const [dues, setDues] = useState([]);
   const [history, setHistory] = useState([]);
@@ -114,59 +116,59 @@ export default function MyDuesScreen() {
   const displayList = activeTab === 'unpaid' ? dues : history;
 
   return (
-    <View className="flex-1 bg-surface">
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
       {/* Header */}
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border">
-        <View className="flex-row items-center mb-3">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-            <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
+      <View style={{ paddingHorizontal: 16, paddingTop: 52, paddingBottom: 16, backgroundColor: T.card, borderBottomWidth: 1, borderBottomColor: T.border }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 16 }}>
+            <Ionicons name="arrow-back" size={24} color={T.text} />
           </TouchableOpacity>
           <View>
-            <Text className="text-white text-xl font-bold">My Dues</Text>
-            <Text className="text-muted text-xs">Financial Settlement Gateway</Text>
+            <Text style={{ color: T.text, fontSize: 20, fontWeight: '900' }}>My Dues</Text>
+            <Text style={{ color: T.muted, fontSize: 12 }}>Financial Settlement Gateway</Text>
           </View>
         </View>
 
         {/* Outstanding balance card */}
-        <View className="bg-surface rounded-2xl border border-border p-4 flex-row items-center justify-between">
+        <View style={{ backgroundColor: T.bg, borderRadius: 16, borderWidth: 1, borderColor: T.border, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
-            <Text className="text-muted text-xs font-bold uppercase tracking-wider mb-1">Total Outstanding</Text>
-            <Text className="text-white text-3xl font-bold">₹{outstanding.totalRupees}</Text>
-            <Text className="text-muted text-xs mt-1">{outstanding.count} unpaid {outstanding.count === 1 ? 'due' : 'dues'}</Text>
+            <Text style={{ color: T.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Total Outstanding</Text>
+            <Text style={{ color: T.text, fontSize: 32, fontWeight: '900' }}>₹{outstanding.totalRupees}</Text>
+            <Text style={{ color: T.muted, fontSize: 12, marginTop: 4 }}>{outstanding.count} unpaid {outstanding.count === 1 ? 'due' : 'dues'}</Text>
           </View>
-          <View className="w-16 h-16 rounded-full bg-error/20 items-center justify-center">
-            <Ionicons name="cash-outline" size={30} color="#ef4444" />
+          <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: `${T.error}22`, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="cash-outline" size={30} color={T.error} />
           </View>
         </View>
       </View>
 
       {/* Tab switcher */}
-      <View className="flex-row mx-4 mt-4 mb-2 bg-card rounded-xl p-1 border border-border">
+      <View style={{ flexDirection: 'row', marginHorizontal: 16, marginTop: 16, marginBottom: 8, backgroundColor: T.card, borderRadius: 12, padding: 4, borderWidth: 1, borderColor: T.border }}>
         {['unpaid', 'history'].map(tab => (
           <TouchableOpacity
             key={tab}
             onPress={() => setActiveTab(tab)}
-            className={`flex-1 py-2 items-center rounded-lg ${activeTab === tab ? 'bg-primary' : 'bg-transparent'}`}
+            style={{ flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8, backgroundColor: activeTab === tab ? T.accent : 'transparent' }}
           >
-            <Text className={`font-bold capitalize ${activeTab === tab ? 'text-white' : 'text-muted'}`}>{tab}</Text>
+            <Text style={{ fontWeight: '800', textTransform: 'capitalize', color: activeTab === tab ? '#fff' : T.muted }}>{tab}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* List */}
-      <ScrollView className="flex-1 px-4 py-2">
+      <ScrollView style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 8 }}>
         {loading ? (
-          <View className="items-center mt-16">
-            <ActivityIndicator color="#6366f1" size="large" />
+          <View style={{ alignItems: 'center', marginTop: 64 }}>
+            <ActivityIndicator color={T.accent} size="large" />
           </View>
         ) : displayList.length === 0 ? (
-          <View className="items-center mt-16">
-            <Ionicons name="checkmark-circle-outline" size={56} color="#22c55e" />
-            <Text className="text-white font-bold text-lg mt-4">
+          <View style={{ alignItems: 'center', marginTop: 64 }}>
+            <Ionicons name="checkmark-circle-outline" size={56} color={T.success} />
+            <Text style={{ color: T.text, fontWeight: '900', fontSize: 18, marginTop: 16 }}>
               {activeTab === 'unpaid' ? 'No Pending Dues!' : 'No History Yet'}
             </Text>
-            <Text className="text-muted text-center mt-2">
-              {activeTab === 'unpaid' ? 'You\'re all cleared.' : 'Payments will appear here once made.'}
+            <Text style={{ color: T.muted, textAlign: 'center', marginTop: 8 }}>
+              {activeTab === 'unpaid' ? "You're all cleared." : 'Payments will appear here once made.'}
             </Text>
           </View>
         ) : (
@@ -176,59 +178,57 @@ export default function MyDuesScreen() {
             const isBeingPaid = paying === due._id;
 
             return (
-              <View key={due._id} className="bg-card rounded-2xl border border-border mb-4 overflow-hidden">
-                <View className="p-4">
-                  <View className="flex-row items-start justify-between mb-3">
+              <View key={due._id} style={{ backgroundColor: T.card, borderRadius: 16, borderWidth: 1, borderColor: T.border, marginBottom: 16, overflow: 'hidden' }}>
+                <View style={{ padding: 16 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                     {/* Type icon */}
-                    <View className="flex-row items-center flex-1 mr-2">
-                      <View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: `${type.color}22` }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+                      <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginRight: 12, backgroundColor: `${type.color}22` }}>
                         <Ionicons name={type.icon} size={20} color={type.color} />
                       </View>
-                      <View className="flex-1">
-                        <Text className="text-muted text-xs font-bold">{type.label}</Text>
-                        <Text className="text-white font-semibold text-sm" numberOfLines={2}>{due.description}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: T.muted, fontSize: 11, fontWeight: '800' }}>{type.label}</Text>
+                        <Text style={{ color: T.text, fontWeight: '600', fontSize: 14 }} numberOfLines={2}>{due.description}</Text>
                       </View>
                     </View>
                     {/* Amount */}
-                    <Text className="text-white font-bold text-lg">₹{(due.amount / 100).toFixed(2)}</Text>
+                    <Text style={{ color: T.text, fontWeight: '900', fontSize: 18 }}>₹{(due.amount / 100).toFixed(2)}</Text>
                   </View>
 
                   {/* Meta */}
-                  <View className="flex-row items-center flex-wrap gap-2 mb-3">
-                    <View className={`flex-row items-center px-2 py-0.5 rounded-full border ${statusStyle.bg} ${statusStyle.border}`}>
-                      <Ionicons name={statusStyle.icon} size={12} color="" />
-                      <Text className={`text-xs font-bold ml-1 capitalize ${statusStyle.text}`}>{due.status}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, borderWidth: 1, backgroundColor: due.status === 'paid' ? `${T.success}18` : due.status === 'waived' ? `${T.muted}18` : `${T.error}18`, borderColor: due.status === 'paid' ? T.success : due.status === 'waived' ? T.muted : T.error }}>
+                      <Ionicons name={statusStyle.icon} size={12} color={due.status === 'paid' ? T.success : due.status === 'waived' ? T.muted : T.error} />
+                      <Text style={{ fontSize: 11, fontWeight: '800', marginLeft: 4, textTransform: 'capitalize', color: due.status === 'paid' ? T.success : due.status === 'waived' ? T.muted : T.error }}>{due.status}</Text>
                     </View>
-                    <Text className="text-muted text-xs">Due: {new Date(due.dueDate).toLocaleDateString()}</Text>
-                    {due.issuedBy && (
-                      <Text className="text-muted text-xs">By: {due.issuedBy.name}</Text>
-                    )}
+                    <Text style={{ color: T.muted, fontSize: 12 }}>Due: {new Date(due.dueDate).toLocaleDateString()}</Text>
+                    {due.issuedBy && <Text style={{ color: T.muted, fontSize: 12 }}>By: {due.issuedBy.name}</Text>}
                   </View>
 
                   {/* Paid info */}
                   {due.status === 'paid' && due.paidAt && (
-                    <View className="bg-success/10 border border-success/30 rounded-xl px-3 py-2 mb-2">
-                      <Text className="text-success text-xs font-bold">
+                    <View style={{ backgroundColor: `${T.success}10`, borderWidth: 1, borderColor: `${T.success}50`, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 8 }}>
+                      <Text style={{ color: T.success, fontSize: 12, fontWeight: '800' }}>
                         ✅ Paid on {new Date(due.paidAt).toLocaleString()}
                       </Text>
                       {due.razorpayPaymentId && (
-                        <Text className="text-slate-500 text-xs mt-0.5">ID: {due.razorpayPaymentId}</Text>
+                        <Text style={{ color: T.muted, fontSize: 11, marginTop: 2 }}>ID: {due.razorpayPaymentId}</Text>
                       )}
                     </View>
                   )}
 
-                  {/* Pay button (unpaid only) */}
+                  {/* Pay button */}
                   {due.status === 'unpaid' && (
                     <TouchableOpacity
                       onPress={() => handlePay(due)}
                       disabled={isBeingPaid}
-                      className="bg-primary rounded-xl py-3 items-center flex-row justify-center"
+                      style={{ backgroundColor: T.accent, borderRadius: 12, paddingVertical: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }}
                     >
                       {isBeingPaid
                         ? <ActivityIndicator color="white" size="small" />
                         : <>
                             <Ionicons name="card-outline" size={18} color="white" />
-                            <Text className="text-white font-bold ml-2">Pay ₹{(due.amount / 100).toFixed(2)}</Text>
+                            <Text style={{ color: 'white', fontWeight: '900', marginLeft: 8 }}>Pay ₹{(due.amount / 100).toFixed(2)}</Text>
                           </>
                       }
                     </TouchableOpacity>

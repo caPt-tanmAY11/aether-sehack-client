@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, TextInput, Modal
+  ActivityIndicator, Alert, TextInput, Modal, StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { clubsApi } from '../../api/clubs.api';
 import { useAuthStore } from '../../store/auth.store';
+import { useTheme } from '../../hooks/ThemeContext';
 
 export default function ClubsScreen({ navigation }) {
+  const { theme: T } = useTheme();
   const [activeTab, setActiveTab] = useState('all');
   const [clubs, setClubs] = useState([]);
   const [myClubs, setMyClubs] = useState([]);
@@ -17,23 +19,14 @@ export default function ClubsScreen({ navigation }) {
   const [requestMessage, setRequestMessage] = useState('');
   const user = useAuthStore(state => state.user);
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+  useEffect(() => { fetchData(); }, [activeTab]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      if (activeTab === 'all') {
-        const data = await clubsApi.listClubs();
-        setClubs(data);
-      } else if (activeTab === 'my') {
-        const data = await clubsApi.getMyClubs();
-        setMyClubs(data);
-      } else if (activeTab === 'requests') {
-        const data = await clubsApi.getPendingRequests();
-        setPendingRequests(data);
-      }
+      if (activeTab === 'all')           setClubs(await clubsApi.listClubs());
+      else if (activeTab === 'my')       setMyClubs(await clubsApi.getMyClubs());
+      else if (activeTab === 'requests') setPendingRequests(await clubsApi.getPendingRequests());
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,14 +35,10 @@ export default function ClubsScreen({ navigation }) {
   };
 
   const isActiveMember = (club) =>
-    club.members?.some(
-      m => (m.userId?._id || m.userId)?.toString() === user?._id?.toString() && m.isActive
-    );
+    club.members?.some(m => (m.userId?._id || m.userId)?.toString() === user?._id?.toString() && m.isActive);
 
   const hasPendingRequest = (club) =>
-    club.joinRequests?.some(
-      r => (r.userId?._id || r.userId)?.toString() === user?._id?.toString() && r.status === 'pending'
-    );
+    club.joinRequests?.some(r => (r.userId?._id || r.userId)?.toString() === user?._id?.toString() && r.status === 'pending');
 
   const openRequestModal = (club) => {
     setRequestModal({ visible: true, clubId: club._id, clubName: club.name });
@@ -61,7 +50,7 @@ export default function ClubsScreen({ navigation }) {
       setLoading(true);
       setRequestModal(m => ({ ...m, visible: false }));
       await clubsApi.requestJoinClub(requestModal.clubId, requestMessage);
-      Alert.alert('Request Sent', `Your request to join ${requestModal.clubName} has been sent to the club president for approval.`);
+      Alert.alert('Request Sent', `Your request to join ${requestModal.clubName} has been sent.`);
       fetchData();
     } catch (err) {
       Alert.alert('Failed', err?.response?.data?.message || 'Failed to send request');
@@ -93,69 +82,82 @@ export default function ClubsScreen({ navigation }) {
     }
   };
 
+  const TABS = [
+    { key: 'all',      label: 'All Clubs' },
+    { key: 'my',       label: 'My Clubs' },
+    { key: 'requests', label: 'Requests' },
+  ];
+
   return (
-    <View className="flex-1 bg-surface">
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border flex-row items-center">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4 p-2 bg-surface rounded-full">
-          <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
+    <View style={[s.root, { backgroundColor: T.bg }]}>
+
+      {/* Header */}
+      <View style={[s.header, { backgroundColor: T.card, borderBottomColor: T.border }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[s.backBtn, { backgroundColor: T.iconBg }]}>
+          <Ionicons name="chevron-back" size={20} color={T.text} />
         </TouchableOpacity>
-        <Text className="text-white text-xl font-bold">Campus Clubs</Text>
+        <Text style={[s.headerTitle, { color: T.text }]}>Campus Clubs</Text>
+        <View style={{ width: 38 }} />
       </View>
 
       {/* Tabs */}
-      <View className="flex-row mx-4 mt-4 mb-2 bg-card rounded-xl p-1 border border-border">
-        {['all', 'my', 'requests'].map(tab => (
+      <View style={[s.tabBar, { backgroundColor: T.card, borderColor: T.border }]}>
+        {TABS.map(tab => (
           <TouchableOpacity
-            key={tab}
-            onPress={() => setActiveTab(tab)}
-            className={`flex-1 py-2 items-center rounded-lg ${activeTab === tab ? 'bg-primary' : 'bg-transparent'}`}
+            key={tab.key}
+            onPress={() => setActiveTab(tab.key)}
+            style={[s.tab, activeTab === tab.key && { backgroundColor: T.accent }]}
+            activeOpacity={0.8}
           >
-            <Text className={`text-xs font-bold ${activeTab === tab ? 'text-white' : 'text-muted'}`}>
-              {tab === 'all' ? 'All Clubs' : tab === 'my' ? 'My Clubs' : 'Requests'}
+            <Text style={[s.tabText, { color: activeTab === tab.key ? '#ffffff' : T.muted }]}>
+              {tab.label}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <ScrollView className="p-4 flex-1">
+      <ScrollView contentContainerStyle={s.scroll}>
         {loading ? (
-          <ActivityIndicator color="#6366f1" size="large" className="mt-10" />
+          <ActivityIndicator color={T.accent} size="large" style={{ marginTop: 40 }} />
         ) : activeTab === 'all' ? (
           clubs.length === 0 ? (
-            <Text className="text-muted text-center mt-10">No clubs found.</Text>
+            <View style={s.empty}>
+              <Ionicons name="people-outline" size={48} color={T.muted} />
+              <Text style={[s.emptyText, { color: T.muted }]}>No clubs found.</Text>
+            </View>
           ) : clubs.map(club => (
-            <View key={club._id} className="bg-card p-4 rounded-2xl border border-border mb-4">
-              <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-white text-lg font-bold flex-1 mr-2">{club.name}</Text>
-                <View className="bg-primary/20 px-2 py-1 rounded-md border border-primary/30">
-                  <Text className="text-primary text-xs font-bold uppercase">{club.category}</Text>
+            <View key={club._id} style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
+              <View style={s.cardTitleRow}>
+                <Text style={[s.cardTitle, { color: T.text }]}>{club.name}</Text>
+                <View style={[s.catBadge, { backgroundColor: T.accentSoft, borderColor: T.accent }]}>
+                  <Text style={[s.catText, { color: T.accent }]}>{club.category}</Text>
                 </View>
               </View>
-              <Text className="text-slate-300 mb-1 text-sm">{club.description}</Text>
+              <Text style={[s.cardDesc, { color: T.textSub }]}>{club.description}</Text>
               {club.facultyAdvisorId?.name && (
-                <Text className="text-muted text-xs mb-3">Advisor: {club.facultyAdvisorId.name}</Text>
+                <Text style={[s.advisor, { color: T.muted }]}>Advisor: {club.facultyAdvisorId.name}</Text>
               )}
-              <View className="flex-row items-center justify-between border-t border-border pt-3 mt-1">
-                <Text className="text-muted text-sm">
+              <View style={[s.cardFooter, { borderTopColor: T.border }]}>
+                <Text style={[s.memberCount, { color: T.muted }]}>
                   {club.members?.filter(m => m.isActive).length || 0} Members
                 </Text>
                 {isActiveMember(club) ? (
                   <TouchableOpacity
                     onPress={() => handleLeave(club._id)}
-                    className="bg-surface border border-border px-4 py-1.5 rounded-lg"
+                    style={[s.actionBtn, { backgroundColor: T.iconBg, borderColor: T.border }]}
                   >
-                    <Text className="text-muted font-bold text-sm">Leave</Text>
+                    <Text style={[s.actionBtnText, { color: T.muted }]}>Leave</Text>
                   </TouchableOpacity>
                 ) : hasPendingRequest(club) ? (
-                  <View className="bg-warning/20 border border-warning/30 px-4 py-1.5 rounded-lg">
-                    <Text className="text-warning font-bold text-sm">Pending</Text>
+                  <View style={[s.actionBtn, { backgroundColor: `${T.warning}18`, borderColor: `${T.warning}50` }]}>
+                    <Text style={[s.actionBtnText, { color: T.warning }]}>Pending</Text>
                   </View>
                 ) : (
                   <TouchableOpacity
                     onPress={() => openRequestModal(club)}
-                    className="bg-success/20 border border-success/30 px-4 py-1.5 rounded-lg"
+                    style={[s.actionBtn, { backgroundColor: `${T.success}18`, borderColor: `${T.success}50` }]}
                   >
-                    <Text className="text-success font-bold text-sm">Request to Join</Text>
+                    <Text style={[s.actionBtnText, { color: T.success }]}>Request to Join</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -163,48 +165,50 @@ export default function ClubsScreen({ navigation }) {
           ))
         ) : activeTab === 'my' ? (
           myClubs.length === 0 ? (
-            <Text className="text-muted text-center mt-10">You haven't joined any clubs yet.</Text>
+            <View style={s.empty}>
+              <Ionicons name="people-circle-outline" size={48} color={T.muted} />
+              <Text style={[s.emptyText, { color: T.muted }]}>You haven't joined any clubs yet.</Text>
+            </View>
           ) : myClubs.map(club => (
-            <View key={club._id} className="bg-card p-4 rounded-2xl border border-border mb-4">
-              <Text className="text-white text-lg font-bold mb-1">{club.name}</Text>
-              <Text className="text-slate-300 text-sm mb-4">{club.description}</Text>
+            <View key={club._id} style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
+              <Text style={[s.cardTitle, { color: T.text }]}>{club.name}</Text>
+              <Text style={[s.cardDesc, { color: T.textSub }]}>{club.description}</Text>
               <TouchableOpacity
                 onPress={() => handleLeave(club._id)}
-                className="self-end bg-error/10 border border-error/30 px-4 py-1.5 rounded-lg"
+                style={[s.leaveBtn, { backgroundColor: `${T.error}10`, borderColor: `${T.error}40` }]}
               >
-                <Text className="text-error font-bold text-sm">Leave Club</Text>
+                <Text style={[s.actionBtnText, { color: T.error }]}>Leave Club</Text>
               </TouchableOpacity>
             </View>
           ))
         ) : (
-          /* Pending join requests — visible to president/advisor */
           pendingRequests.length === 0 ? (
-            <View className="items-center mt-10">
-              <Ionicons name="checkmark-circle-outline" size={48} color="#64748b" />
-              <Text className="text-muted text-center mt-3">No pending join requests.</Text>
+            <View style={s.empty}>
+              <Ionicons name="checkmark-circle-outline" size={48} color={T.muted} />
+              <Text style={[s.emptyText, { color: T.muted }]}>No pending join requests.</Text>
             </View>
           ) : pendingRequests.map(entry => (
-            <View key={entry.clubId} className="bg-card p-4 rounded-2xl border border-border mb-4">
-              <Text className="text-white text-lg font-bold mb-3">{entry.clubName}</Text>
+            <View key={entry.clubId} style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
+              <Text style={[s.cardTitle, { color: T.text }]}>{entry.clubName}</Text>
               {entry.requests.map(req => (
-                <View key={req._id} className="bg-surface p-3 rounded-xl border border-border mb-3">
-                  <Text className="text-white font-bold">{req.userId?.name || 'Unknown'}</Text>
-                  <Text className="text-muted text-xs mb-1">{req.userId?.email}</Text>
-                  {req.message ? (
-                    <Text className="text-slate-300 text-sm mb-3">"{req.message}"</Text>
-                  ) : null}
-                  <View className="flex-row gap-2 mt-1">
+                <View key={req._id} style={[s.reqItem, { backgroundColor: T.iconBg, borderColor: T.border }]}>
+                  <Text style={[s.reqName, { color: T.text }]}>{req.userId?.name || 'Unknown'}</Text>
+                  <Text style={[s.reqEmail, { color: T.muted }]}>{req.userId?.email}</Text>
+                  {req.message && (
+                    <Text style={[s.reqMsg, { color: T.textSub }]}>"{req.message}"</Text>
+                  )}
+                  <View style={s.reqActions}>
                     <TouchableOpacity
                       onPress={() => handleReview(entry.clubId, req._id, 'approved')}
-                      className="flex-1 bg-success/20 border border-success/30 py-2 rounded-lg items-center"
+                      style={[s.actionBtn, { flex: 1, backgroundColor: `${T.success}18`, borderColor: `${T.success}50`, justifyContent: 'center' }]}
                     >
-                      <Text className="text-success font-bold text-sm">Approve</Text>
+                      <Text style={[s.actionBtnText, { color: T.success }]}>Approve</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleReview(entry.clubId, req._id, 'rejected')}
-                      className="flex-1 bg-error/10 border border-error/30 py-2 rounded-lg items-center ml-2"
+                      style={[s.actionBtn, { flex: 1, backgroundColor: `${T.error}10`, borderColor: `${T.error}40`, justifyContent: 'center' }]}
                     >
-                      <Text className="text-error font-bold text-sm">Reject</Text>
+                      <Text style={[s.actionBtnText, { color: T.error }]}>Reject</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -212,42 +216,41 @@ export default function ClubsScreen({ navigation }) {
             </View>
           ))
         )}
-        <View className="h-20" />
       </ScrollView>
 
-      {/* Request to Join Modal */}
+      {/* Request Join Modal */}
       <Modal
         visible={requestModal.visible}
         transparent
         animationType="fade"
         onRequestClose={() => setRequestModal(m => ({ ...m, visible: false }))}
       >
-        <View className="flex-1 bg-black/60 justify-center items-center px-6">
-          <View className="bg-card w-full p-5 rounded-2xl border border-border">
-            <Text className="text-white text-lg font-bold mb-1">Request to Join</Text>
-            <Text className="text-muted text-sm mb-4">{requestModal.clubName}</Text>
-            <Text className="text-muted text-xs font-bold mb-2">Message (optional)</Text>
+        <View style={s.modalOverlay}>
+          <View style={[s.modalCard, { backgroundColor: T.card, borderColor: T.border }]}>
+            <Text style={[s.modalTitle, { color: T.text }]}>Request to Join</Text>
+            <Text style={[s.modalSub, { color: T.muted }]}>{requestModal.clubName}</Text>
+            <Text style={[s.modalLabel, { color: T.muted }]}>Message (optional)</Text>
             <TextInput
-              className="bg-surface text-white p-3 rounded-xl border border-border mb-5 h-20"
+              style={[s.modalInput, { backgroundColor: T.bg, color: T.text, borderColor: T.border }]}
               placeholder="Why do you want to join?"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={T.muted}
               value={requestMessage}
               onChangeText={setRequestMessage}
               multiline
               textAlignVertical="top"
             />
-            <View className="flex-row gap-3">
+            <View style={s.modalActions}>
               <TouchableOpacity
                 onPress={() => setRequestModal(m => ({ ...m, visible: false }))}
-                className="flex-1 bg-surface border border-border py-3 rounded-xl items-center"
+                style={[s.modalBtn, { backgroundColor: T.iconBg, borderColor: T.border }]}
               >
-                <Text className="text-muted font-bold">Cancel</Text>
+                <Text style={[s.modalBtnText, { color: T.muted }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleRequestJoin}
-                className="flex-1 bg-primary py-3 rounded-xl items-center ml-2"
+                style={[s.modalBtn, { backgroundColor: T.accent }]}
               >
-                <Text className="text-white font-bold">Send Request</Text>
+                <Text style={[s.modalBtnText, { color: '#ffffff' }]}>Send</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -256,3 +259,88 @@ export default function ClubsScreen({ navigation }) {
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  root:   { flex: 1 },
+  scroll: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 160 },
+
+  header: {
+    paddingTop: 52, paddingBottom: 14, paddingHorizontal: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  backBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  headerTitle: { fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
+
+  tabBar: {
+    flexDirection: 'row', marginHorizontal: 16, marginTop: 12, marginBottom: 4,
+    borderRadius: 16, borderWidth: 2, padding: 4, gap: 4,
+  },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: 12, alignItems: 'center' },
+  tabText: { fontSize: 12, fontWeight: '800' },
+
+  empty:     { alignItems: 'center', paddingTop: 48, gap: 12 },
+  emptyText: { fontSize: 15, fontWeight: '700' },
+
+  card: {
+    borderRadius: 20, borderWidth: 2, padding: 16, marginBottom: 14,
+    shadowColor: '#000', shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.07, shadowRadius: 0, elevation: 3,
+  },
+  cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  cardTitle: { fontSize: 16, fontWeight: '900', flex: 1, marginRight: 8 },
+  cardDesc:  { fontSize: 13, lineHeight: 18, marginBottom: 6 },
+  advisor:   { fontSize: 12, fontWeight: '600', marginBottom: 10 },
+
+  catBadge: {
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 8, borderWidth: 1.5,
+  },
+  catText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+
+  cardFooter: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, marginTop: 4,
+  },
+  memberCount: { fontSize: 13, fontWeight: '600' },
+  actionBtn: {
+    paddingHorizontal: 14, paddingVertical: 7,
+    borderRadius: 10, borderWidth: 1.5,
+    flexDirection: 'row', alignItems: 'center',
+  },
+  actionBtnText: { fontSize: 13, fontWeight: '800' },
+
+  leaveBtn: {
+    alignSelf: 'flex-end', paddingHorizontal: 14, paddingVertical: 7,
+    borderRadius: 10, borderWidth: 1.5, marginTop: 8,
+  },
+
+  reqItem: { borderRadius: 14, borderWidth: 1.5, padding: 12, marginTop: 10 },
+  reqName:    { fontSize: 15, fontWeight: '800', marginBottom: 2 },
+  reqEmail:   { fontSize: 12, marginBottom: 6 },
+  reqMsg:     { fontSize: 13, fontStyle: 'italic', marginBottom: 10 },
+  reqActions: { flexDirection: 'row', gap: 8 },
+
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24,
+  },
+  modalCard: { width: '100%', borderRadius: 24, borderWidth: 2, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', marginBottom: 4 },
+  modalSub:   { fontSize: 13, marginBottom: 16 },
+  modalLabel: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 },
+  modalInput: {
+    borderWidth: 2, borderRadius: 14,
+    padding: 12, height: 80, fontSize: 14,
+    marginBottom: 16,
+  },
+  modalActions:  { flexDirection: 'row', gap: 10 },
+  modalBtn: {
+    flex: 1, paddingVertical: 13, borderRadius: 12,
+    borderWidth: 2, alignItems: 'center',
+  },
+  modalBtnText: { fontSize: 15, fontWeight: '800' },
+});

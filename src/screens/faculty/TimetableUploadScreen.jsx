@@ -7,6 +7,7 @@ import { timetableApi } from '../../api/timetable.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../store/auth.store';
+import { useTheme } from '../../hooks/ThemeContext';
 
 // ─── Static reference data pulled from DB ────────────────────────────────────
 const DEPARTMENTS = [
@@ -60,20 +61,22 @@ const TIME_OPTIONS = [
 
 // ─── Generic dropdown picker ──────────────────────────────────────────────────
 function Picker({ label, value, options, onSelect, keyExtractor, labelExtractor }) {
+  const { theme: T } = useTheme();
   const [open, setOpen] = useState(false);
   const displayLabel = value ? labelExtractor(options.find(o => keyExtractor(o) === value) || {}) : `Select ${label}`;
 
   return (
     <View className="mb-4">
-      <Text className="text-muted text-xs font-bold mb-1 uppercase tracking-wider">{label}</Text>
+      <Text style={{ color: T.muted }} className="text-xs font-bold mb-1 uppercase tracking-wider">{label}</Text>
       <TouchableOpacity
         onPress={() => setOpen(true)}
-        className="bg-surface flex-row items-center justify-between px-4 py-3 rounded-xl border border-border"
+        style={{ backgroundColor: T.bg, borderColor: T.border }}
+        className="flex-row items-center justify-between px-4 py-3 rounded-xl border"
       >
-        <Text className={value ? 'text-white text-sm' : 'text-muted text-sm'} numberOfLines={1}>
+        <Text style={{ color: value ? T.text : T.muted }} className="text-sm" numberOfLines={1}>
           {displayLabel}
         </Text>
-        <Ionicons name="chevron-down" size={16} color="#64748b" />
+        <Ionicons name="chevron-down" size={16} color={T.muted} />
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -82,11 +85,11 @@ function Picker({ label, value, options, onSelect, keyExtractor, labelExtractor 
           onPress={() => setOpen(false)}
           className="flex-1 bg-black/60 justify-end"
         >
-          <View className="bg-card rounded-t-3xl border-t border-border max-h-80">
-            <View className="flex-row items-center justify-between px-5 py-4 border-b border-border">
-              <Text className="text-white font-bold text-base">{label}</Text>
+          <View style={{ backgroundColor: T.card, borderTopColor: T.border, borderTopWidth: 1 }} className="rounded-t-3xl max-h-80">
+            <View style={{ borderBottomColor: T.border, borderBottomWidth: 1 }} className="flex-row items-center justify-between px-5 py-4">
+              <Text style={{ color: T.text }} className="font-bold text-base">{label}</Text>
               <TouchableOpacity onPress={() => setOpen(false)}>
-                <Ionicons name="close" size={22} color="#94a3b8" />
+                <Ionicons name="close" size={22} color={T.muted} />
               </TouchableOpacity>
             </View>
             <FlatList
@@ -97,12 +100,13 @@ function Picker({ label, value, options, onSelect, keyExtractor, labelExtractor 
                 return (
                   <TouchableOpacity
                     onPress={() => { onSelect(keyExtractor(item)); setOpen(false); }}
-                    className={`px-5 py-4 border-b border-border/40 flex-row items-center justify-between ${selected ? 'bg-primary/10' : ''}`}
+                    style={{ backgroundColor: selected ? `${T.accent}15` : T.card, borderBottomColor: `${T.border}80` }}
+                    className="px-5 py-4 border-b flex-row items-center justify-between"
                   >
-                    <Text className={selected ? 'text-primary font-bold' : 'text-white'}>
+                    <Text style={{ color: selected ? T.accent : T.text, fontWeight: selected ? 'bold' : 'normal' }}>
                       {labelExtractor(item)}
                     </Text>
-                    {selected && <Ionicons name="checkmark-circle" size={18} color="#6366f1" />}
+                    {selected && <Ionicons name="checkmark-circle" size={18} color={T.accent} />}
                   </TouchableOpacity>
                 );
               }}
@@ -116,12 +120,13 @@ function Picker({ label, value, options, onSelect, keyExtractor, labelExtractor 
 
 // ─── Single slot editor card ──────────────────────────────────────────────────
 function SlotCard({ slot, index, onUpdate, onRemove, subjects, faculty }) {
+  const { theme: T } = useTheme();
   return (
-    <View className="bg-surface rounded-2xl border border-border mb-4 overflow-hidden">
-      <View className="flex-row items-center justify-between px-4 py-3 bg-card border-b border-border">
-        <Text className="text-primary font-bold text-sm">Slot {index + 1}</Text>
+    <View style={{ backgroundColor: T.bg, borderColor: T.border }} className="rounded-2xl border mb-4 overflow-hidden">
+      <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1 }} className="flex-row items-center justify-between px-4 py-3">
+        <Text style={{ color: T.accent }} className="font-bold text-sm">Slot {index + 1}</Text>
         <TouchableOpacity onPress={onRemove}>
-          <Ionicons name="trash-outline" size={18} color="#ef4444" />
+          <Ionicons name="trash-outline" size={18} color={T.error} />
         </TouchableOpacity>
       </View>
 
@@ -210,6 +215,7 @@ const BLANK_SLOT = () => ({
 });
 
 export default function TimetableUploadScreen() {
+  const { theme: T } = useTheme();
   const navigation = useNavigation();
   const userDeptId = useAuthStore(state => state.user?.departmentId);
 
@@ -282,22 +288,22 @@ export default function TimetableUploadScreen() {
   const ACADEMIC_YEARS = ['2024-2025', '2025-2026', '2026-2027'];
 
   return (
-    <View className="flex-1 bg-surface">
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
       {/* Fixed Header */}
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border flex-row items-center">
+      <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1 }} className="px-4 pt-12 pb-4 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={24} color={T.text} />
         </TouchableOpacity>
         <View>
-          <Text className="text-white text-xl font-bold">Upload Timetable</Text>
-          <Text className="text-muted text-xs">{slots.length} slot{slots.length !== 1 ? 's' : ''} configured</Text>
+          <Text style={{ color: T.text }} className="text-xl font-bold">Upload Timetable</Text>
+          <Text style={{ color: T.muted }} className="text-xs">{slots.length} slot{slots.length !== 1 ? 's' : ''} configured</Text>
         </View>
       </View>
 
       <ScrollView className="flex-1 px-4 py-4" keyboardShouldPersistTaps="handled">
         {/* Section Meta */}
-        <View className="bg-card p-4 rounded-2xl border border-border mb-4">
-          <Text className="text-white font-bold mb-3">Timetable Details</Text>
+        <View style={{ backgroundColor: T.card, borderColor: T.border }} className="p-4 rounded-2xl border mb-4">
+          <Text style={{ color: T.text }} className="font-bold mb-3">Timetable Details</Text>
 
           <Picker
             label="Semester"
@@ -329,13 +335,14 @@ export default function TimetableUploadScreen() {
 
         {/* Slot Cards */}
         <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-white font-bold text-base">Slots</Text>
+          <Text style={{ color: T.text }} className="font-bold text-base">Slots</Text>
           <TouchableOpacity
             onPress={addSlot}
-            className="flex-row items-center bg-primary/20 px-3 py-1.5 rounded-xl border border-primary/40"
+            style={{ backgroundColor: `${T.accent}20`, borderColor: `${T.accent}40` }}
+            className="flex-row items-center px-3 py-1.5 rounded-xl border"
           >
-            <Ionicons name="add" size={18} color="#6366f1" />
-            <Text className="text-primary text-sm font-bold ml-1">Add Slot</Text>
+            <Ionicons name="add" size={18} color={T.accent} />
+            <Text style={{ color: T.accent }} className="text-sm font-bold ml-1">Add Slot</Text>
           </TouchableOpacity>
         </View>
 
@@ -355,10 +362,11 @@ export default function TimetableUploadScreen() {
         <TouchableOpacity
           onPress={handleUpload}
           disabled={loading}
-          className="bg-primary p-4 rounded-2xl flex-row justify-center items-center mb-10 mt-2"
+          style={{ backgroundColor: T.accent }}
+          className="p-4 rounded-2xl flex-row justify-center items-center mb-10 mt-2"
         >
           {loading
-            ? <ActivityIndicator color="white" />
+            ? <ActivityIndicator color="#fff" />
             : <>
                 <Ionicons name="cloud-upload-outline" size={20} color="white" />
                 <Text className="text-white font-bold text-base ml-2">Submit to HOD</Text>

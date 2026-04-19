@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../store/auth.store';
 
 export const apiClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://10.10.120.29:4000/api',
+  baseURL: process.env.RENDER_BASE_URL || 'https://aether-sehack-server.onrender.com/api',
   timeout: 10000,
 });
 

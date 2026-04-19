@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { leaveApi } from '../../api/leave.api';
 import { handleViewPdf } from '../../utils/pdf';
+import { useTheme } from '../../hooks/ThemeContext';
+import AppHeader from '../../components/AppHeader';
 
-export default function LeaveApprovalsScreen({ navigation }) {
+export default function LeaveApprovalsScreen() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [remarkText, setRemarkText] = useState('');
   const [activeRequest, setActiveRequest] = useState(null);
+  const { theme: T } = useTheme();
 
   useEffect(() => {
     fetchRequests();
@@ -18,7 +21,7 @@ export default function LeaveApprovalsScreen({ navigation }) {
     try {
       setLoading(true);
       const data = await leaveApi.getPending();
-      setRequests(data);
+      setRequests(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -41,75 +44,107 @@ export default function LeaveApprovalsScreen({ navigation }) {
   };
 
   return (
-    <View className="flex-1 bg-surface">
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border flex-row items-center">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4 p-2 bg-surface rounded-full">
-          <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
-        </TouchableOpacity>
-        <Text className="text-white text-xl font-bold">Leave Approvals</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
+      <AppHeader title="Leave Approvals" showBack />
 
-      <ScrollView className="p-4 flex-1">
-        {loading ? (
-          <ActivityIndicator color="#6366f1" size="large" className="mt-10" />
-        ) : requests.length === 0 ? (
-          <View className="items-center mt-10">
-            <Ionicons name="checkmark-done-circle" size={48} color="#22c55e" className="mb-4" />
-            <Text className="text-muted text-lg">No pending leave requests.</Text>
-          </View>
-        ) : (
-          requests.map(req => (
-            <View key={req._id} className="bg-card p-4 rounded-2xl border border-border mb-4">
-              <View className="flex-row justify-between items-center mb-1">
-                <Text className="text-white text-lg font-bold flex-1">{req.facultyId?.name}</Text>
-                <TouchableOpacity onPress={() => {
-                  handleViewPdf(`/leave/faculty/${req._id}/pdf`, `Faculty_Leave_${req._id}`).catch(err => Alert.alert('Error', err.message));
-                }} className="p-2 bg-surface rounded-full border border-border ml-2">
-                  <Ionicons name="document-text-outline" size={20} color="#818cf8" />
-                </TouchableOpacity>
-              </View>
-              <Text className="text-primary font-bold capitalize mb-3">{req.leaveType} Leave</Text>
-              
-              <Text className="text-muted text-xs mb-1">Duration</Text>
-              <Text className="text-slate-300 mb-3">{new Date(req.fromDate).toLocaleDateString()} – {new Date(req.toDate).toLocaleDateString()} ({req.totalDays || 1} day{req.totalDays > 1 ? 's' : ''})</Text>
-              
-              <Text className="text-muted text-xs mb-1">Reason</Text>
-              <Text className="text-slate-300 mb-4">{req.reason}</Text>
-
-              {activeRequest === req._id ? (
-                <View className="border-t border-border pt-4 mt-2">
-                  <TextInput
-                    className="bg-surface text-white p-3 rounded-xl border border-border mb-4"
-                    placeholder="Add remarks (optional)..."
-                    placeholderTextColor="#64748b"
-                    value={remarkText}
-                    onChangeText={setRemarkText}
-                  />
-                  <View className="flex-row justify-end space-x-3">
-                    <TouchableOpacity onPress={() => setActiveRequest(null)} className="px-4 py-2">
-                      <Text className="text-muted font-bold">Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleReview(req._id, 'rejected')} className="bg-error/20 border border-error/50 px-4 py-2 rounded-lg mr-2">
-                      <Text className="text-error font-bold">Reject</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleReview(req._id, 'approved')} className="bg-success/20 border border-success/50 px-4 py-2 rounded-lg">
-                      <Text className="text-success font-bold">Approve</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <TouchableOpacity 
-                  onPress={() => setActiveRequest(req._id)}
-                  className="bg-surface border border-border p-3 rounded-xl items-center"
-                >
-                  <Text className="text-white font-bold">Review Request</Text>
-                </TouchableOpacity>
-              )}
+      {loading && requests.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator color={T.accent} size="large" />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+          {requests.length === 0 ? (
+            <View style={{ alignItems: 'center', marginTop: 40 }}>
+              <Ionicons name="checkmark-done-circle-outline" size={56} color={T.muted} />
+              <Text style={{ color: T.text, fontSize: 18, fontWeight: '900', marginTop: 16 }}>All Caught Up</Text>
+              <Text style={{ color: T.muted, textAlign: 'center', marginTop: 8 }}>
+                No pending leave requests.
+              </Text>
             </View>
-          ))
-        )}
-        <View className="h-20" />
-      </ScrollView>
+          ) : (
+            requests.map(req => (
+              <View key={req._id} style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <Text style={{ color: T.text, fontSize: 16, fontWeight: '900', flex: 1 }}>{req.facultyId?.name}</Text>
+                  <TouchableOpacity onPress={() => {
+                    handleViewPdf(`/leave/faculty/${req._id}/pdf`, `Faculty_Leave_${req._id}`).catch(err => Alert.alert('Error', err.message));
+                  }} style={[s.pdfBtn, { backgroundColor: T.iconBg, borderColor: T.border }]}>
+                    <Ionicons name="document-text-outline" size={20} color={T.accent} />
+                  </TouchableOpacity>
+                </View>
+                
+                <Text style={{ color: T.accent, fontWeight: '900', textTransform: 'capitalize', marginBottom: 12 }}>
+                  {req.leaveType} Leave
+                </Text>
+                
+                <Text style={[s.label, { color: T.muted }]}>Duration</Text>
+                <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 12 }}>
+                  {new Date(req.fromDate).toLocaleDateString()} – {new Date(req.toDate).toLocaleDateString()} ({req.totalDays || 1} day{req.totalDays > 1 ? 's' : ''})
+                </Text>
+                
+                <Text style={[s.label, { color: T.muted }]}>Reason</Text>
+                <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 16 }}>{req.reason}</Text>
+
+                {activeRequest === req._id ? (
+                  <View style={{ borderTopWidth: 1, borderTopColor: T.border, paddingTop: 16 }}>
+                    <TextInput
+                      style={[s.textArea, { backgroundColor: T.bg, color: T.text, borderColor: T.border }]}
+                      placeholder="Add remarks (optional)..."
+                      placeholderTextColor={T.muted}
+                      value={remarkText}
+                      onChangeText={setRemarkText}
+                      multiline
+                    />
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+                      <TouchableOpacity onPress={() => setActiveRequest(null)} style={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+                        <Text style={{ color: T.muted, fontWeight: '800' }}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        onPress={() => handleReview(req._id, 'rejected')} 
+                        style={[s.actionBtn, { backgroundColor: `${T.error}20`, borderColor: `${T.error}50` }]}
+                      >
+                        <Text style={{ color: T.error, fontWeight: '900' }}>Reject</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        onPress={() => handleReview(req._id, 'approved')} 
+                        style={[s.actionBtn, { backgroundColor: `${T.success}20`, borderColor: `${T.success}50` }]}
+                      >
+                        <Text style={{ color: T.success, fontWeight: '900' }}>Approve</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    onPress={() => setActiveRequest(req._id)}
+                    style={[s.reviewBtn, { backgroundColor: T.bg, borderColor: T.border }]}
+                  >
+                    <Text style={{ color: T.text, fontWeight: '900' }}>Review Request</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  card: {
+    borderRadius: 20, borderWidth: 1, padding: 16, marginBottom: 16,
+  },
+  pdfBtn: {
+    width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginLeft: 12,
+  },
+  label: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
+  textArea: {
+    borderRadius: 12, borderWidth: 1, padding: 12, fontSize: 14, minHeight: 60, marginBottom: 12,
+  },
+  actionBtn: {
+    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1,
+  },
+  reviewBtn: {
+    paddingVertical: 12, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center',
+  },
+});

@@ -5,8 +5,10 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../store/auth.store';
 import { useSocket } from '../../hooks/useSocket';
+import { useTheme } from '../../hooks/ThemeContext';
 
 export default function CoordinationChatScreen() {
+  const { theme: T } = useTheme();
   const route = useRoute();
   const navigation = useNavigation();
   const { room } = route.params;
@@ -76,22 +78,22 @@ export default function CoordinationChatScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-surface">
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: T.bg }}>
       {/* Header */}
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border flex-row items-center">
+      <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1 }} className="px-4 pt-12 pb-4 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={24} color={T.text} />
         </TouchableOpacity>
         <View className="flex-1">
-          <Text className="text-white text-lg font-bold" numberOfLines={1}>{room.name}</Text>
-          <Text className="text-muted text-xs">{room.members?.length} Members</Text>
+          <Text style={{ color: T.text }} className="text-lg font-bold" numberOfLines={1}>{room.name}</Text>
+          <Text style={{ color: T.muted }} className="text-xs">{room.members?.length} Members</Text>
         </View>
       </View>
 
       {/* Messages */}
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator color="#6366f1" size="large" />
+          <ActivityIndicator color={T.accent} size="large" />
         </View>
       ) : (
         <ScrollView 
@@ -106,12 +108,12 @@ export default function CoordinationChatScreen() {
             return (
               <View key={msg._id || index} className={`mb-3 max-w-[80%] ${isMe ? 'self-end' : 'self-start'}`}>
                 {showName && (
-                  <Text className="text-muted text-xs ml-1 mb-1 font-bold">{msg.senderId?.name}</Text>
+                  <Text style={{ color: T.muted }} className="text-xs ml-1 mb-1 font-bold">{msg.senderId?.name}</Text>
                 )}
-                <View className={`px-4 py-3 rounded-2xl ${isMe ? 'bg-primary rounded-tr-sm' : 'bg-card border border-border rounded-tl-sm'}`}>
-                  <Text className="text-white text-base">{msg.message}</Text>
+                <View style={{ backgroundColor: isMe ? T.accent : T.card, borderColor: isMe ? T.accent : T.border }} className={`px-4 py-3 rounded-2xl ${isMe ? 'rounded-tr-sm' : 'border rounded-tl-sm'}`}>
+                  <Text style={{ color: isMe ? '#ffffff' : T.text }} className="text-base">{msg.message}</Text>
                 </View>
-                <Text className={`text-slate-500 text-[10px] mt-1 mx-1 ${isMe ? 'text-right' : 'text-left'}`}>
+                <Text style={{ color: T.muted }} className={`text-[10px] mt-1 mx-1 ${isMe ? 'text-right' : 'text-left'}`}>
                   {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </Text>
               </View>
@@ -121,11 +123,12 @@ export default function CoordinationChatScreen() {
       )}
 
       {/* Input */}
-      <View className="p-4 bg-card border-t border-border flex-row items-center">
+      <View style={{ backgroundColor: T.card, borderTopColor: T.border, borderTopWidth: 1 }} className="p-4 flex-row items-center">
         <TextInput
-          className="flex-1 bg-surface text-white p-3 px-4 rounded-full border border-border mr-3"
+          style={{ backgroundColor: T.bg, color: T.text, borderColor: T.border }}
+          className="flex-1 p-3 px-4 rounded-full border mr-3"
           placeholder="Type a message..."
-          placeholderTextColor="#64748b"
+          placeholderTextColor={T.muted}
           value={inputText}
           onChangeText={setInputText}
           multiline
@@ -133,9 +136,10 @@ export default function CoordinationChatScreen() {
         <TouchableOpacity 
           onPress={sendMessage}
           disabled={!inputText.trim()}
-          className={`w-12 h-12 rounded-full items-center justify-center ${inputText.trim() ? 'bg-primary' : 'bg-surface border border-border'}`}
+          style={{ backgroundColor: inputText.trim() ? T.accent : T.bg, borderColor: inputText.trim() ? T.accent : T.border }}
+          className="w-12 h-12 rounded-full border items-center justify-center"
         >
-          <Ionicons name="send" size={20} color={inputText.trim() ? "white" : "#64748b"} style={inputText.trim() ? { marginLeft: 4 } : {}} />
+          <Ionicons name="send" size={20} color={inputText.trim() ? "#ffffff" : T.muted} style={inputText.trim() ? { marginLeft: 4 } : {}} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { issuesApi } from '../../api/issues.api';
+import { useTheme } from '../../hooks/ThemeContext';
 
 export default function IssuesScreen() {
-  const [activeTab, setActiveTab] = useState('report'); // 'report' or 'mine'
+  const { theme: T } = useTheme();
+  const [activeTab, setActiveTab] = useState('report');
   const [myIssues, setMyIssues] = useState([]);
   
-  // Report Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('it');
@@ -14,16 +16,14 @@ export default function IssuesScreen() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (activeTab === 'mine') {
-      fetchMyIssues();
-    }
+    if (activeTab === 'mine') fetchMyIssues();
   }, [activeTab]);
 
   const fetchMyIssues = async () => {
     try {
       setLoading(true);
       const data = await issuesApi.getMyIssues();
-      setMyIssues(data);
+      setMyIssues(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -36,7 +36,6 @@ export default function IssuesScreen() {
       Alert.alert('Error', 'Please fill all fields');
       return;
     }
-
     setLoading(true);
     try {
       await issuesApi.reportIssue({ title, description, category, locationDesc: location });
@@ -51,111 +50,175 @@ export default function IssuesScreen() {
     }
   };
 
-  return (
-    <ScrollView className="flex-1 bg-surface px-4 py-6">
-      <Text className="text-white text-2xl font-bold mb-6">Helpdesk</Text>
+  const statusColor = (status) => {
+    if (status === 'open') return T.error;
+    if (status === 'in_progress') return T.warning;
+    return T.success;
+  };
 
-      <View className="flex-row mb-6 bg-card rounded-xl p-1 border border-border">
-        <TouchableOpacity 
-          onPress={() => setActiveTab('report')}
-          className={`flex-1 py-2 items-center rounded-lg ${activeTab === 'report' ? 'bg-primary' : 'bg-transparent'}`}
-        >
-          <Text className={activeTab === 'report' ? 'text-white font-bold' : 'text-muted font-bold'}>Report Issue</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => setActiveTab('mine')}
-          className={`flex-1 py-2 items-center rounded-lg ${activeTab === 'mine' ? 'bg-primary' : 'bg-transparent'}`}
-        >
-          <Text className={activeTab === 'mine' ? 'text-white font-bold' : 'text-muted font-bold'}>My Tickets</Text>
-        </TouchableOpacity>
+  return (
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
+      {/* Header */}
+      <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1, paddingTop: 52, paddingBottom: 14, paddingHorizontal: 20 }}>
+        <Text style={{ color: T.text, fontSize: 22, fontWeight: '900' }}>Helpdesk</Text>
+        <Text style={{ color: T.muted, fontSize: 12, marginTop: 2 }}>Report or track campus issues</Text>
       </View>
 
-      {activeTab === 'report' ? (
-        <View>
-          <View className="bg-card p-4 rounded-2xl border border-border mb-4">
-            <Text className="text-muted mb-2 font-bold ml-1">Title</Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
+        {/* Tab Toggle */}
+        <View style={{ flexDirection: 'row', backgroundColor: T.card, borderColor: T.border, borderWidth: 1, borderRadius: 14, padding: 4, marginBottom: 20 }}>
+          {[{ id: 'report', label: 'Report Issue' }, { id: 'mine', label: 'My Tickets' }].map(tab => (
+            <TouchableOpacity
+              key={tab.id}
+              onPress={() => setActiveTab(tab.id)}
+              style={{
+                flex: 1,
+                paddingVertical: 9,
+                alignItems: 'center',
+                borderRadius: 10,
+                backgroundColor: activeTab === tab.id ? T.accent : 'transparent',
+              }}
+            >
+              <Text style={{ color: activeTab === tab.id ? '#ffffff' : T.muted, fontWeight: '700', fontSize: 13 }}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {activeTab === 'report' ? (
+          <View style={{ backgroundColor: T.card, borderColor: T.border, borderWidth: 1, borderRadius: 20, padding: 16 }}>
+            {/* Title */}
+            <Text style={{ color: T.muted, fontWeight: '700', marginBottom: 6, marginLeft: 2 }}>Title</Text>
             <TextInput
-              className="bg-surface text-white p-4 rounded-xl mb-4 border border-border"
+              style={{
+                backgroundColor: T.bg,
+                color: T.text,
+                borderColor: T.border,
+                borderWidth: 1,
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 14,
+                fontSize: 14,
+              }}
               placeholder="e.g. Projector not working"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={T.muted}
               value={title}
               onChangeText={setTitle}
             />
 
-            <Text className="text-muted mb-2 font-bold ml-1">Location</Text>
+            {/* Location */}
+            <Text style={{ color: T.muted, fontWeight: '700', marginBottom: 6, marginLeft: 2 }}>Location</Text>
             <TextInput
-              className="bg-surface text-white p-4 rounded-xl mb-4 border border-border"
-              placeholder="e.g. Lab 101"
-              placeholderTextColor="#64748b"
+              style={{
+                backgroundColor: T.bg,
+                color: T.text,
+                borderColor: T.border,
+                borderWidth: 1,
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 14,
+                fontSize: 14,
+              }}
+              placeholder="e.g. Lab 101, Room 204"
+              placeholderTextColor={T.muted}
               value={location}
               onChangeText={setLocation}
             />
 
-            <Text className="text-muted mb-2 font-bold ml-1">Category</Text>
-            <View className="flex-row mb-4 space-x-2">
+            {/* Category */}
+            <Text style={{ color: T.muted, fontWeight: '700', marginBottom: 8, marginLeft: 2 }}>Category</Text>
+            <View style={{ flexDirection: 'row', marginBottom: 14 }}>
               {['it', 'maintenance', 'disciplinary'].map(cat => (
-                <TouchableOpacity 
+                <TouchableOpacity
                   key={cat}
                   onPress={() => setCategory(cat)}
-                  className={`px-4 py-2 rounded-full border ${category === cat ? 'bg-primary border-primary' : 'bg-surface border-border'} mr-2`}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    marginRight: 8,
+                    backgroundColor: category === cat ? T.accent : T.bg,
+                    borderColor: category === cat ? T.accent : T.border,
+                    borderWidth: 1,
+                  }}
                 >
-                  <Text className={category === cat ? 'text-white' : 'text-muted capitalize'}>{cat}</Text>
+                  <Text style={{ color: category === cat ? '#ffffff' : T.muted, fontWeight: '600', textTransform: 'capitalize', fontSize: 12 }}>
+                    {cat}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text className="text-muted mb-2 font-bold ml-1">Description</Text>
+            {/* Description */}
+            <Text style={{ color: T.muted, fontWeight: '700', marginBottom: 6, marginLeft: 2 }}>Description</Text>
             <TextInput
-              className="bg-surface text-white p-4 rounded-xl mb-6 border border-border h-24"
-              placeholder="Provide details..."
-              placeholderTextColor="#64748b"
+              style={{
+                backgroundColor: T.bg,
+                color: T.text,
+                borderColor: T.border,
+                borderWidth: 1,
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 20,
+                fontSize: 14,
+                height: 100,
+                textAlignVertical: 'top',
+              }}
+              placeholder="Describe the issue in detail..."
+              placeholderTextColor={T.muted}
               multiline
-              textAlignVertical="top"
               value={description}
               onChangeText={setDescription}
             />
 
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={handleSubmit}
               disabled={loading}
-              className="bg-warning p-4 rounded-xl items-center"
+              style={{ backgroundColor: T.accent, padding: 16, borderRadius: 14, alignItems: 'center' }}
             >
-              {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">Submit Report</Text>}
+              {loading
+                ? <ActivityIndicator color="#ffffff" />
+                : <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 16 }}>Submit Report</Text>
+              }
             </TouchableOpacity>
           </View>
-        </View>
-      ) : (
-        <View>
-          {loading ? (
-            <ActivityIndicator color="#6366f1" size="large" className="mt-10" />
-          ) : myIssues.length === 0 ? (
-            <Text className="text-muted text-center mt-10">You have not reported any issues.</Text>
-          ) : (
-            myIssues.map((iss, i) => (
-              <View key={i} className="bg-card p-4 rounded-2xl border border-border mb-4">
-                <View className="flex-row justify-between items-start mb-2">
-                  <View className="flex-1 mr-2">
-                    <Text className="text-white font-bold text-lg">{iss.title}</Text>
-                    <Text className="text-muted text-sm">{iss.category} • Loc: {iss.locationDesc}</Text>
-                  </View>
-                  <View className={`px-2 py-1 rounded-md border ${iss.status === 'open' ? 'bg-error/20 border-error/50' : iss.status === 'in_progress' ? 'bg-warning/20 border-warning/50' : 'bg-success/20 border-success/50'}`}>
-                    <Text className={`${iss.status === 'open' ? 'text-error' : iss.status === 'in_progress' ? 'text-warning' : 'text-success'} text-xs font-bold capitalize`}>{iss.status.replace('_', ' ')}</Text>
-                  </View>
-                </View>
-                <Text className="text-slate-300 text-sm mb-2">{iss.description}</Text>
-                {iss.resolutionNotes && (
-                  <View className="bg-surface p-3 rounded-xl border border-border mt-2">
-                    <Text className="text-success text-xs font-bold mb-1">Resolution Note:</Text>
-                    <Text className="text-slate-300 text-xs">{iss.resolutionNotes}</Text>
-                  </View>
-                )}
+        ) : (
+          <View>
+            {loading ? (
+              <ActivityIndicator color={T.accent} size="large" style={{ marginTop: 40 }} />
+            ) : myIssues.length === 0 ? (
+              <View style={{ alignItems: 'center', marginTop: 60 }}>
+                <Ionicons name="shield-checkmark-outline" size={56} color={T.muted} />
+                <Text style={{ color: T.muted, marginTop: 16, fontSize: 16 }}>No issues reported yet.</Text>
               </View>
-            ))
-          )}
-        </View>
-      )}
-
-      <View className="h-10" />
-    </ScrollView>
+            ) : (
+              myIssues.map((iss, i) => (
+                <View key={i} style={{ backgroundColor: T.card, borderColor: T.border, borderWidth: 1, borderRadius: 20, padding: 16, marginBottom: 14 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                      <Text style={{ color: T.text, fontWeight: '800', fontSize: 15 }}>{iss.title}</Text>
+                      <Text style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>{iss.category} · {iss.locationDesc}</Text>
+                    </View>
+                    <View style={{ backgroundColor: `${statusColor(iss.status)}20`, borderColor: `${statusColor(iss.status)}50`, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}>
+                      <Text style={{ color: statusColor(iss.status), fontSize: 10, fontWeight: '800', textTransform: 'capitalize' }}>
+                        {iss.status.replace('_', ' ')}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: T.textSub, fontSize: 13, lineHeight: 18, marginBottom: 6 }}>{iss.description}</Text>
+                  {iss.resolutionNotes && (
+                    <View style={{ backgroundColor: `${T.success}10`, borderColor: `${T.success}30`, borderWidth: 1, padding: 10, borderRadius: 10, marginTop: 4 }}>
+                      <Text style={{ color: T.success, fontSize: 11, fontWeight: '700', marginBottom: 3 }}>Resolution Note:</Text>
+                      <Text style={{ color: T.textSub, fontSize: 12 }}>{iss.resolutionNotes}</Text>
+                    </View>
+                  )}
+                </View>
+              ))
+            )}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }

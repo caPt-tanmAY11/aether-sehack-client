@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
-  Alert, ActivityIndicator, Modal, Platform
+  Alert, ActivityIndicator, StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -9,11 +9,15 @@ import { leaveApi } from '../../api/leave.api';
 import { apiClient } from '../../api/client';
 import CalendarPicker from '../../components/CalendarPicker';
 import { handleViewPdf } from '../../utils/pdf';
+import { useTheme } from '../../hooks/ThemeContext';
+import AppHeader from '../../components/AppHeader';
 
 const LEAVE_TYPES = ['medical', 'personal', 'family', 'other'];
+const STATUS_COLOR = { pending: '#f59e0b', approved: '#22c55e', rejected: '#ef4444' };
 
 export default function LeaveApplicationScreen() {
   const navigation = useNavigation();
+  const { theme: T } = useTheme();
   const [faculty, setFaculty] = useState([]);
   const [myLeaves, setMyLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,118 +61,214 @@ export default function LeaveApplicationScreen() {
     } finally { setSubmitting(false); }
   };
 
-  const STATUS_COLOR = { pending: '#f59e0b', approved: '#22c55e', rejected: '#ef4444' };
-
-  if (loading) {
-    return <View className="flex-1 bg-surface justify-center items-center"><ActivityIndicator color="#6366f1" size="large" /></View>;
-  }
-
   return (
-    <ScrollView className="flex-1 bg-surface px-4 pt-6">
-      <View className="flex-row items-center mb-6">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
-        </TouchableOpacity>
-        <Text className="text-white text-2xl font-bold">Leave Application</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
+      <AppHeader title="Leave Application" showBack />
 
-      <TouchableOpacity
-        onPress={() => setShowForm(!showForm)}
-        className="bg-primary p-4 rounded-2xl mb-6 flex-row items-center justify-center"
-      >
-        <Ionicons name={showForm ? 'chevron-up' : 'add-circle'} size={20} color="white" />
-        <Text className="text-white font-bold text-lg ml-2">{showForm ? 'Collapse Form' : 'Apply for Leave'}</Text>
-      </TouchableOpacity>
-
-      {showForm && (
-        <View className="bg-card p-4 rounded-2xl border border-border mb-6">
-          <Text className="text-muted text-sm font-bold mb-2">Select Faculty</Text>
-          <View className="bg-surface border border-border rounded-xl overflow-hidden mb-4">
-            {faculty.length === 0 ? (
-              <Text className="text-muted text-sm p-3">No faculty found.</Text>
-            ) : (
-              faculty.map((f, i) => (
-                <TouchableOpacity
-                  key={i}
-                  onPress={() => setSelectedFaculty(f)}
-                  className={`flex-row items-center p-3 ${i < faculty.length - 1 ? 'border-b border-border/50' : ''} ${selectedFaculty?._id === f._id ? 'bg-primary/20' : ''}`}
-                >
-                  <View className="w-8 h-8 rounded-full bg-primary/20 items-center justify-center mr-3">
-                    <Text className="text-primary text-xs font-bold">{f.name?.[0]?.toUpperCase()}</Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text className={`font-bold text-sm ${selectedFaculty?._id === f._id ? 'text-primary' : 'text-white'}`}>{f.name}</Text>
-                    <Text className="text-muted text-xs">{f.departmentId?.name}</Text>
-                  </View>
-                  {selectedFaculty?._id === f._id && <Ionicons name="checkmark-circle" size={18} color="#6366f1" />}
-                </TouchableOpacity>
-              ))
-            )}
-          </View>
-
-          <Text className="text-muted text-sm font-bold mb-2">Leave Type</Text>
-          <View className="flex-row flex-wrap mb-4">
-            {LEAVE_TYPES.map(lt => (
-              <TouchableOpacity
-                key={lt}
-                onPress={() => setLeaveType(lt)}
-                className={`mr-2 mb-2 px-3 py-1.5 rounded-full border ${leaveType === lt ? 'bg-primary border-primary' : 'bg-surface border-border'}`}
-              >
-                <Text className={`text-xs font-bold capitalize ${leaveType === lt ? 'text-white' : 'text-muted'}`}>{lt}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Calendar pickers */}
-          <CalendarPicker label="From Date" value={fromDate} onChange={setFromDate} />
-          <CalendarPicker label="To Date" value={toDate} onChange={setToDate} />
-
-          <Text className="text-muted text-sm font-bold mb-2">Reason</Text>
-          <TextInput
-            className="bg-surface text-white p-3 rounded-xl border border-border mb-4"
-            placeholder="Describe your reason..." placeholderTextColor="#64748b"
-            value={reason} onChangeText={setReason} multiline numberOfLines={3} textAlignVertical="top"
-          />
-
-          <TouchableOpacity
-            onPress={handleSubmit} disabled={submitting}
-            className="bg-primary p-4 rounded-xl items-center"
-          >
-            {submitting ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold">Submit Application</Text>}
-          </TouchableOpacity>
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator color={T.accent} size="large" />
         </View>
-      )}
-
-      <Text className="text-white text-lg font-bold mb-4">My Leave History</Text>
-      {myLeaves.length === 0 ? (
-        <Text className="text-muted text-center">No leave applications yet.</Text>
       ) : (
-        myLeaves.map((lv, i) => (
-          <View key={i} className="bg-card p-4 rounded-2xl border border-border mb-4">
-            <View className="flex-row justify-between mb-1 items-center">
-              <View className="flex-1">
-                <Text className="text-white font-bold capitalize">{lv.leaveType} Leave</Text>
-                <View className="px-2 py-0.5 rounded-full mt-1 self-start" style={{ backgroundColor: `${STATUS_COLOR[lv.status]}20` }}>
-                  <Text className="text-xs font-bold uppercase" style={{ color: STATUS_COLOR[lv.status] }}>{lv.status}</Text>
-                </View>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+
+          {/* Apply button */}
+          <TouchableOpacity
+            onPress={() => setShowForm(!showForm)}
+            style={[s.applyBtn, { backgroundColor: T.accent }]}
+            activeOpacity={0.85}
+          >
+            <Ionicons name={showForm ? 'chevron-up' : 'add-circle-outline'} size={20} color="#fff" />
+            <Text style={s.applyBtnText}>{showForm ? 'Collapse Form' : 'Apply for Leave'}</Text>
+          </TouchableOpacity>
+
+          {/* Leave Form */}
+          {showForm && (
+            <View style={[s.formCard, { backgroundColor: T.card, borderColor: T.border }]}>
+
+              {/* Select Faculty */}
+              <Text style={[s.label, { color: T.muted }]}>Select Faculty</Text>
+              <View style={[s.listBox, { backgroundColor: T.bg, borderColor: T.border }]}>
+                {faculty.length === 0 ? (
+                  <Text style={{ color: T.muted, padding: 12, fontSize: 13 }}>No faculty found.</Text>
+                ) : (
+                  faculty.map((f, i) => (
+                    <TouchableOpacity
+                      key={f._id || i}
+                      onPress={() => setSelectedFaculty(f)}
+                      style={[
+                        s.facultyRow,
+                        {
+                          borderBottomWidth: i < faculty.length - 1 ? StyleSheet.hairlineWidth : 0,
+                          borderBottomColor: T.border,
+                          backgroundColor: selectedFaculty?._id === f._id ? `${T.accent}14` : 'transparent',
+                        },
+                      ]}
+                    >
+                      <View style={[s.facultyAvatar, { backgroundColor: `${T.accent}20` }]}>
+                        <Text style={{ color: T.accent, fontWeight: '900', fontSize: 13 }}>
+                          {f.name?.[0]?.toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: selectedFaculty?._id === f._id ? T.accent : T.text, fontWeight: '700', fontSize: 14 }}>
+                          {f.name}
+                        </Text>
+                        <Text style={{ color: T.muted, fontSize: 12 }}>{f.departmentId?.name}</Text>
+                      </View>
+                      {selectedFaculty?._id === f._id && (
+                        <Ionicons name="checkmark-circle" size={20} color={T.accent} />
+                      )}
+                    </TouchableOpacity>
+                  ))
+                )}
               </View>
-              <TouchableOpacity onPress={() => {
-                handleViewPdf(`/leave/student/${lv._id}/pdf`, `Student_Leave_${lv._id}`).catch(err => Alert.alert('Error', err.message));
-              }} className="p-2 bg-surface rounded-full border border-border ml-2">
-                <Ionicons name="document-text-outline" size={20} color="#818cf8" />
+
+              {/* Leave Type */}
+              <Text style={[s.label, { color: T.muted }]}>Leave Type</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                {LEAVE_TYPES.map(lt => (
+                  <TouchableOpacity
+                    key={lt}
+                    onPress={() => setLeaveType(lt)}
+                    style={[
+                      s.typePill,
+                      {
+                        backgroundColor: leaveType === lt ? T.accent : T.bg,
+                        borderColor: leaveType === lt ? T.accent : T.border,
+                      },
+                    ]}
+                  >
+                    <Text style={{
+                      fontSize: 12, fontWeight: '800', textTransform: 'capitalize',
+                      color: leaveType === lt ? '#ffffff' : T.muted,
+                    }}>{lt}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Date pickers */}
+              <CalendarPicker label="From Date" value={fromDate} onChange={setFromDate} />
+              <CalendarPicker label="To Date" value={toDate} onChange={setToDate} />
+
+              {/* Reason */}
+              <Text style={[s.label, { color: T.muted }]}>Reason</Text>
+              <TextInput
+                style={[s.textArea, { backgroundColor: T.bg, color: T.text, borderColor: T.border }]}
+                placeholder="Describe your reason..."
+                placeholderTextColor={T.muted}
+                value={reason}
+                onChangeText={setReason}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
+
+              {/* Submit */}
+              <TouchableOpacity
+                onPress={handleSubmit}
+                disabled={submitting}
+                style={[s.submitBtn, { backgroundColor: T.accent, opacity: submitting ? 0.7 : 1 }]}
+                activeOpacity={0.85}
+              >
+                {submitting
+                  ? <ActivityIndicator color="#fff" />
+                  : <Text style={s.submitBtnText}>Submit Application</Text>
+                }
               </TouchableOpacity>
             </View>
-            <Text className="text-muted text-xs mb-1">To: {lv.facultyId?.name}</Text>
-            <Text className="text-slate-300 text-sm mb-2">{lv.reason}</Text>
-            <Text className="text-muted text-xs">
-              {new Date(lv.fromDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} →{' '}
-              {new Date(lv.toDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-            </Text>
-            {lv.remarks ? <Text className="text-muted text-xs mt-1 italic">Remarks: {lv.remarks}</Text> : null}
-          </View>
-        ))
+          )}
+
+          {/* Leave History */}
+          <Text style={[s.sectionTitle, { color: T.text }]}>My Leave History</Text>
+          {myLeaves.length === 0 ? (
+            <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+              <Ionicons name="document-text-outline" size={40} color={T.muted} />
+              <Text style={{ color: T.muted, marginTop: 10, fontWeight: '600' }}>No leave applications yet.</Text>
+            </View>
+          ) : (
+            myLeaves.map((lv, i) => (
+              <View key={i} style={[s.historyCard, { backgroundColor: T.card, borderColor: T.border }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: T.text, fontWeight: '900', fontSize: 15, textTransform: 'capitalize' }}>
+                      {lv.leaveType} Leave
+                    </Text>
+                    <View style={[s.statusPill, { backgroundColor: `${STATUS_COLOR[lv.status]}20`, borderColor: STATUS_COLOR[lv.status] }]}>
+                      <Text style={{ color: STATUS_COLOR[lv.status], fontSize: 10, fontWeight: '900', textTransform: 'uppercase' }}>
+                        {lv.status}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleViewPdf(`/leave/student/${lv._id}/pdf`, `Student_Leave_${lv._id}`)
+                        .catch(err => Alert.alert('Error', err.message))
+                    }
+                    style={[s.pdfBtn, { backgroundColor: T.iconBg, borderColor: T.border }]}
+                  >
+                    <Ionicons name="document-text-outline" size={18} color={T.accent} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={{ color: T.muted, fontSize: 12, marginBottom: 4 }}>To: {lv.facultyId?.name}</Text>
+                <Text style={{ color: T.textSub, fontSize: 13, marginBottom: 6 }}>{lv.reason}</Text>
+                <Text style={{ color: T.muted, fontSize: 12 }}>
+                  {new Date(lv.fromDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  {' → '}
+                  {new Date(lv.toDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </Text>
+                {lv.remarks && (
+                  <Text style={{ color: T.muted, fontSize: 12, marginTop: 4, fontStyle: 'italic' }}>Remarks: {lv.remarks}</Text>
+                )}
+              </View>
+            ))
+          )}
+        </ScrollView>
       )}
-      <View className="h-10" />
-    </ScrollView>
+    </View>
   );
 }
+
+const s = StyleSheet.create({
+  applyBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, paddingVertical: 14, borderRadius: 16, marginBottom: 16,
+  },
+  applyBtnText: { color: '#fff', fontWeight: '900', fontSize: 16 },
+
+  formCard: {
+    borderRadius: 20, borderWidth: 1, padding: 16, marginBottom: 24,
+  },
+  label: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
+  listBox: { borderRadius: 14, borderWidth: 1, overflow: 'hidden', marginBottom: 16 },
+  facultyRow: {
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, gap: 12,
+  },
+  facultyAvatar: {
+    width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+  },
+  typePill: {
+    borderRadius: 999, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 6,
+  },
+  textArea: {
+    borderRadius: 12, borderWidth: 1, padding: 12, fontSize: 14,
+    minHeight: 80, marginBottom: 16,
+  },
+  submitBtn: {
+    borderRadius: 14, paddingVertical: 14, alignItems: 'center',
+  },
+  submitBtnText: { color: '#fff', fontWeight: '900', fontSize: 15 },
+
+  sectionTitle: { fontSize: 20, fontWeight: '900', letterSpacing: -0.4, marginBottom: 14 },
+  historyCard: {
+    borderRadius: 16, borderWidth: 1, padding: 14, marginBottom: 12,
+  },
+  statusPill: {
+    alignSelf: 'flex-start', borderRadius: 999, borderWidth: 1,
+    paddingHorizontal: 8, paddingVertical: 2, marginTop: 4,
+  },
+  pdfBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1,
+  },
+});

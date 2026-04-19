@@ -82,6 +82,22 @@ export default function ProfileScreen() {
           ))}
         </View>
 
+        {/* Batches Link */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Batches')}
+          style={[s.infoCard, { backgroundColor: T.card, borderColor: T.border, flexDirection: 'row', alignItems: 'center', padding: 18 }]}
+          activeOpacity={0.85}
+        >
+          <View style={[s.fieldIcon, { backgroundColor: T.accentSoft }]}>
+            <Ionicons name="layers-outline" size={16} color={T.accent} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 14 }}>
+            <Text style={[s.fieldLabel, { color: T.muted }]}>Batches</Text>
+            <Text style={[s.fieldValue, { color: T.text }]}>View My Batches</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={T.muted} />
+        </TouchableOpacity>
+
         {/* Sign Out */}
         <TouchableOpacity
           onPress={logout}

@@ -47,7 +47,9 @@ export default function AdminTabs() {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Personal" component={HomeScreen} options={{ title: 'Personal' }} />
+      {!['dean', 'hod', 'superadmin'].includes(role) && (
+        <Tab.Screen name="Personal" component={HomeScreen} options={{ title: 'Personal' }} />
+      )}
       <Tab.Screen 
         name={role === 'council' ? 'Council' : 'Admin'} 
         component={AdminHomeScreen} 

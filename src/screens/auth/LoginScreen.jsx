@@ -7,14 +7,15 @@ import { useAuthStore } from '../../store/auth.store';
 import { authApi } from '../../api/auth.api';
 import { Ionicons } from '@expo/vector-icons';
 
-const ACCENT   = '#6b38d4';
-const NAVY     = '#091426';
-const BG       = '#f7f9fb';
-const CARD_BG  = '#ffffff';
-const MUTED    = '#8590a6';
-const BORDER   = '#e4e6ea';
-const ERROR    = '#ba1a1a';
-const ERR_SOFT = '#ffdad6';
+/* ─── Light Theme Design Tokens (matches app LIGHT theme) ─── */
+const BG      = '#f7f9fb';
+const CARD    = '#ffffff';
+const ACCENT  = '#6b38d4';
+const NAVY    = '#091426';
+const MUTED   = '#8590a6';
+const BORDER  = '#eceef0';
+const ERROR   = '#ba1a1a';
+const ERR_BG  = '#ffdad6';
 
 export default function LoginScreen() {
   const [email, setEmail]       = useState('');
@@ -54,39 +55,45 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Decorative top accent */}
-        <View style={s.topAccent}>
-          <View style={s.accentCircleL} />
-          <View style={s.accentCircleR} />
+
+        {/* ── Neubrutalism top stripe */}
+        <View style={s.stripe}>
+          <Text style={s.stripeText}>AETHER CAMPUS OS</Text>
+          <View style={s.stripeDot} />
+          <Text style={s.stripeText}>SECURE LOGIN</Text>
         </View>
 
-        {/* Brand */}
+        {/* ── Brand Block */}
         <View style={s.brand}>
-          <View style={s.logoWrap}>
-            <View style={s.logoHex}>
-              <Text style={s.logoChar}>⬡</Text>
-            </View>
-            <View style={s.logoPulse} />
+          <View style={s.logoBox}>
+            <Text style={s.logoChar}>⬡</Text>
           </View>
-          <Text style={s.appName}>AETHER</Text>
-          <Text style={s.tagline}>Campus Operating System</Text>
+          <View style={s.brandText}>
+            <Text style={s.appName}>AETHER</Text>
+            <Text style={s.tagline}>CAMPUS OPERATING SYSTEM</Text>
+          </View>
         </View>
 
-        {/* Form Card */}
+        {/* ── Form Card — Neubrutalism on light bg */}
         <View style={s.card}>
-          <Text style={s.cardTitle}>Welcome back</Text>
+
+          <View style={s.cardLabel}>
+            <Text style={s.cardLabelText}>// AUTHENTICATE</Text>
+          </View>
+
+          <Text style={s.cardTitle}>Welcome{'\n'}Back.</Text>
           <Text style={s.cardSub}>Sign in to your campus dashboard</Text>
 
           {error && (
             <View style={s.errorBox}>
-              <Ionicons name="alert-circle-outline" size={16} color={ERROR} />
+              <Ionicons name="alert-circle" size={16} color={ERROR} />
               <Text style={s.errorText}>{error}</Text>
             </View>
           )}
 
           {/* Email */}
           <View style={s.field}>
-            <Text style={s.fieldLabel}>College Email</Text>
+            <Text style={s.fieldLabel}>// COLLEGE EMAIL</Text>
             <View style={[s.inputRow, focused === 'email' && s.inputFocused]}>
               <Ionicons
                 name="mail-outline"
@@ -111,7 +118,7 @@ export default function LoginScreen() {
 
           {/* Password */}
           <View style={s.field}>
-            <Text style={s.fieldLabel}>Password</Text>
+            <Text style={s.fieldLabel}>// PASSWORD</Text>
             <View style={[s.inputRow, focused === 'password' && s.inputFocused]}>
               <Ionicons
                 name="lock-closed-outline"
@@ -150,7 +157,7 @@ export default function LoginScreen() {
               <ActivityIndicator color="#ffffff" />
             ) : (
               <>
-                <Text style={s.ctaText}>Authenticate</Text>
+                <Text style={s.ctaText}>AUTHENTICATE</Text>
                 <View style={s.ctaArrow}>
                   <Ionicons name="arrow-forward" size={16} color={ACCENT} />
                 </View>
@@ -158,21 +165,19 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <Text style={s.footNote}>
-            Secured · SPIT Campus Infrastructure
-          </Text>
+          <Text style={s.footNote}>Secured · SPIT Campus Infrastructure</Text>
         </View>
 
-        {/* Bottom pill chips */}
+        {/* Role tags */}
         <View style={s.chipRow}>
-          {['Students', 'Faculty', 'Admin'].map(r => (
+          {['STUDENTS', 'FACULTY', 'ADMIN'].map(r => (
             <View key={r} style={s.chip}>
               <Text style={s.chipText}>{r}</Text>
             </View>
           ))}
         </View>
 
-        <Text style={s.version}>Aether v1.0 · Glass UI</Text>
+        <Text style={s.version}>Aether v1.0 · Neubrutalism</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -181,184 +186,117 @@ export default function LoginScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
   scroll: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 48,
+    flexGrow: 1, paddingHorizontal: 24, paddingBottom: 48,
     justifyContent: 'center',
-    overflow: 'hidden',
   },
 
-  /* Decorative blobs */
-  topAccent: {
-    position: 'absolute',
-    top: -80,
-    left: -60,
-    right: -60,
-    height: 300,
-    overflow: 'hidden',
+  /* Neubrutalist stripe */
+  stripe: {
+    flexDirection: 'row', alignItems: 'center',
+    borderBottomWidth: 2, borderColor: NAVY,
+    paddingVertical: 10, marginBottom: 28, marginTop: 60, gap: 10,
   },
-  accentCircleL: {
-    position: 'absolute',
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: 'rgba(107,56,212,0.08)',
-    top: 0,
-    left: -60,
-  },
-  accentCircleR: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(107,56,212,0.05)',
-    top: 60,
-    right: -40,
-  },
+  stripeText: { color: MUTED, fontSize: 10, fontWeight: '900', letterSpacing: 2 },
+  stripeDot:  { width: 6, height: 6, backgroundColor: ACCENT, borderRadius: 0 },
 
   /* Brand */
-  brand: { alignItems: 'center', paddingTop: 80, marginBottom: 36 },
-  logoWrap: { width: 76, height: 76, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
-  logoHex: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 28 },
+  logoBox: {
+    width: 60, height: 60,
     backgroundColor: ACCENT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: ACCENT,
-    shadowOpacity: 0.45,
-    shadowRadius: 20,
-    shadowOffset: { height: 8 },
-    elevation: 10,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: NAVY,
+    // Hard NB shadow
+    shadowColor: NAVY,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1, shadowRadius: 0, elevation: 8,
+    borderRadius: 0,
   },
-  logoPulse: {
-    position: 'absolute',
-    width: 76,
-    height: 76,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: 'rgba(107,56,212,0.25)',
-  },
-  logoChar: { fontSize: 28, color: '#ffffff' },
+  logoChar: { fontSize: 26, color: '#ffffff', fontWeight: '900' },
+  brandText: { flex: 1 },
   appName: {
-    fontSize: 34,
-    fontWeight: '900',
-    color: NAVY,
-    letterSpacing: 8,
-    marginBottom: 6,
+    fontSize: 34, fontWeight: '900', color: NAVY,
+    letterSpacing: 8, lineHeight: 36,
   },
   tagline: {
-    fontSize: 12,
-    color: MUTED,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
+    fontSize: 8, color: MUTED, fontWeight: '800',
+    letterSpacing: 2, textTransform: 'uppercase', marginTop: 4,
   },
 
-  /* Card */
+  /* Card — white bg, hard black border + shadow (NB on light) */
   card: {
-    backgroundColor: CARD_BG,
-    borderRadius: 28,
-    padding: 28,
+    backgroundColor: CARD,
+    borderWidth: 2, borderColor: NAVY,
+    padding: 24, marginBottom: 20,
     shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 32,
-    elevation: 8,
-    marginBottom: 24,
+    shadowOffset: { width: 6, height: 6 },
+    shadowOpacity: 1, shadowRadius: 0, elevation: 10,
+    borderRadius: 0,
   },
-  cardTitle: { fontSize: 24, fontWeight: '900', color: NAVY, letterSpacing: -0.5 },
-  cardSub: { fontSize: 14, color: MUTED, marginTop: 4, marginBottom: 24 },
+  cardLabel: {
+    borderLeftWidth: 3, borderColor: ACCENT,
+    paddingLeft: 8, marginBottom: 12,
+  },
+  cardLabelText: { color: ACCENT, fontSize: 10, fontWeight: '900', letterSpacing: 2 },
+  cardTitle:  { fontSize: 34, fontWeight: '900', color: NAVY, letterSpacing: -1, lineHeight: 38, marginBottom: 6 },
+  cardSub:    { fontSize: 13, color: MUTED, marginBottom: 24, fontWeight: '600' },
 
   errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: ERR_SOFT,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
-    borderLeftWidth: 3,
-    borderLeftColor: ERROR,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: ERR_BG,
+    borderWidth: 2, borderColor: ERROR,
+    padding: 12, marginBottom: 20, borderRadius: 0,
   },
   errorText: { color: ERROR, fontSize: 13, fontWeight: '600', flex: 1 },
 
   field: { marginBottom: 18 },
   fieldLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#45474c',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 8,
+    fontSize: 9, fontWeight: '900', color: MUTED,
+    letterSpacing: 2, marginBottom: 8,
   },
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     backgroundColor: BG,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: BORDER,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    borderWidth: 2, borderColor: BORDER,
+    paddingHorizontal: 14, paddingVertical: 13,
+    borderRadius: 0,
   },
-  inputFocused: {
-    borderColor: ACCENT,
-    backgroundColor: '#faf8ff',
-  },
+  inputFocused: { borderColor: ACCENT, backgroundColor: '#faf8ff' },
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 15, color: NAVY, fontWeight: '500' },
   eyeBtn: { paddingLeft: 8, padding: 4 },
 
+  /* NB CTA: navy bg, hard white shadow */
   cta: {
     backgroundColor: NAVY,
-    borderRadius: 14,
+    borderWidth: 2, borderColor: NAVY,
     paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    marginTop: 6,
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 8,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 12, marginTop: 6,
+    shadowColor: ACCENT,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1, shadowRadius: 0, elevation: 8,
+    borderRadius: 0,
   },
-  ctaText: { color: '#ffffff', fontSize: 17, fontWeight: '800', letterSpacing: -0.3 },
+  ctaText:  { color: '#ffffff', fontSize: 15, fontWeight: '900', letterSpacing: 3 },
   ctaArrow: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 28, height: 28, backgroundColor: '#ffffff',
+    alignItems: 'center', justifyContent: 'center', borderRadius: 0,
   },
   footNote: {
-    textAlign: 'center',
-    color: '#c5c6cd',
-    fontSize: 11,
-    marginTop: 20,
-    fontWeight: '500',
-    letterSpacing: 0.3,
+    textAlign: 'center', color: '#c5c6cd',
+    fontSize: 10, marginTop: 18, fontWeight: '700', letterSpacing: 1,
   },
 
-  /* Bottom chips */
   chipRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-    marginBottom: 16,
+    flexDirection: 'row', justifyContent: 'center',
+    gap: 0, marginBottom: 14,
   },
   chip: {
-    backgroundColor: '#ffffff',
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: BORDER,
+    borderWidth: 2, borderColor: NAVY,
+    paddingHorizontal: 14, paddingVertical: 6,
+    backgroundColor: CARD, marginLeft: -2, borderRadius: 0,
   },
-  chipText: { fontSize: 12, fontWeight: '600', color: MUTED },
-  version: { textAlign: 'center', color: '#c5c6cd', fontSize: 11, fontWeight: '500' },
+  chipText: { fontSize: 10, fontWeight: '900', color: MUTED, letterSpacing: 1.5 },
+  version:  { textAlign: 'center', color: '#c5c6cd', fontSize: 10, fontWeight: '700', letterSpacing: 2 },
 });

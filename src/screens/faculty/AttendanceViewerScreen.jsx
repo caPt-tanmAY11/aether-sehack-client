@@ -5,12 +5,14 @@ import { apiClient } from '../../api/client';
 import { timetableApi } from '../../api/timetable.api';
 import { useNavigation } from '@react-navigation/native';
 import CalendarPicker from '../../components/CalendarPicker';
+import { useTheme } from '../../hooks/ThemeContext';
 
 const STATUS_OPTIONS = ['present', 'absent', 'late'];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function AttendanceViewerScreen() {
   const navigation = useNavigation();
+  const { theme: T } = useTheme();
   const [timetables, setTimetables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -52,11 +54,16 @@ export default function AttendanceViewerScreen() {
     }
   };
 
+  const isSameSlot = (slot, timetableId) =>
+    selectedSlot?.startTime === slot.startTime &&
+    selectedSlot?.day === slot.day &&
+    selectedSlot?.timetableId === timetableId;
+
   const loadSession = async (timetableId, slot) => {
-    if (selectedSlot?.startTime === slot.startTime && selectedSlot?.day === slot.day) {
+    if (isSameSlot(slot, timetableId)) {
       setSelectedSlot(null); setSessionData(null); return;
     }
-    setSelectedSlot(slot);
+    setSelectedSlot({ ...slot, timetableId });
     setSessionLoading(true);
     setSessionData(null);
     try {
@@ -106,7 +113,7 @@ export default function AttendanceViewerScreen() {
   };
 
   if (loading) {
-    return <View className="flex-1 bg-surface justify-center items-center"><ActivityIndicator color="#6366f1" size="large" /></View>;
+    return <View style={{ backgroundColor: T.bg }} className="flex-1 justify-center items-center"><ActivityIndicator color={T.accent} size="large" /></View>;
   }
 
   const groupedSlots = {};
@@ -121,17 +128,19 @@ export default function AttendanceViewerScreen() {
   });
 
   return (
-    <ScrollView className="flex-1 bg-surface px-4 py-6">
-      <View className="flex-row items-center mb-6">
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
+      {/* Sticky header */}
+      <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1 }} className="px-4 pt-12 pb-4 flex-row items-center">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={24} color={T.text} />
         </TouchableOpacity>
-        <Text className="text-white text-2xl font-bold">Weekly Attendance</Text>
+        <Text style={{ color: T.text }} className="text-xl font-bold">View Attendance</Text>
       </View>
 
-      <View className="mb-4">
-        <CalendarPicker label="Select Date" value={selectedDate} onChange={setSelectedDate} />
-      </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+        <View className="mb-4">
+          <CalendarPicker label="Select Date" value={selectedDate} onChange={setSelectedDate} />
+        </View>
 
       {(() => {
         const dayName = getDayName(selectedDate);
@@ -139,65 +148,68 @@ export default function AttendanceViewerScreen() {
 
         if (daySlots.length === 0) {
           return (
-            <View className="items-center py-8 bg-card border border-border rounded-2xl">
-              <Ionicons name="calendar-clear-outline" size={40} color="#64748b" />
-              <Text className="text-muted mt-2">No classes scheduled for this date ({dayName}).</Text>
+            <View style={{ backgroundColor: T.card, borderColor: T.border }} className="items-center py-8 border rounded-2xl">
+              <Ionicons name="calendar-clear-outline" size={40} color={T.muted} />
+              <Text style={{ color: T.muted }} className="mt-2">No classes scheduled for this date ({dayName}).</Text>
             </View>
           );
         }
 
         return (
           <View className="mb-6">
-            <Text className="text-muted text-sm font-bold uppercase tracking-wider mb-2">{dayName} Classes</Text>
+            <Text style={{ color: T.muted }} className="text-sm font-bold uppercase tracking-wider mb-2">{dayName} Classes</Text>
             {daySlots.map((slot, index) => (
               <View key={index}>
                 <TouchableOpacity
                   onPress={() => loadSession(slot.timetableId, slot)}
-                  className="bg-card p-4 rounded-2xl border border-border mb-2 flex-row justify-between items-center"
+                  style={{ backgroundColor: T.card, borderColor: T.border }}
+                  className="p-4 rounded-2xl border mb-2 flex-row justify-between items-center"
                 >
                   <View>
-                    <Text className="text-white text-base font-bold">{slot.subjectId?.name} (Div {slot.division})</Text>
-                    <Text className="text-muted text-sm">{slot.startTime} - {slot.endTime}</Text>
+                    <Text style={{ color: T.text }} className="text-base font-bold">{slot.subjectId?.name} (Div {slot.division})</Text>
+                    <Text style={{ color: T.muted }} className="text-sm">{slot.startTime} - {slot.endTime}</Text>
                   </View>
                   <Ionicons
-                    name={selectedSlot?.startTime === slot.startTime && selectedSlot?.day === slot.day ? 'chevron-up' : 'chevron-down'}
-                    size={22} color="#64748b"
+                    name={isSameSlot(slot, slot.timetableId) ? 'chevron-up' : 'chevron-down'}
+                    size={22} color={T.muted}
                   />
                 </TouchableOpacity>
 
-                {selectedSlot?.startTime === slot.startTime && selectedSlot?.day === slot.day && (
-                  <View className="bg-surface border border-border rounded-2xl p-4 mb-4">
+                {isSameSlot(slot, slot.timetableId) && (
+                  <View style={{ backgroundColor: T.bg, borderColor: T.border }} className="border rounded-2xl p-4 mb-4">
                     {sessionLoading ? (
-                      <ActivityIndicator color="#6366f1" />
+                      <ActivityIndicator color={T.accent} />
                     ) : sessionData?.records?.length > 0 ? (
                       sessionData.records.map((rec, i) => (
-                        <View key={i} className="flex-row justify-between items-center py-2.5 border-b border-border/50">
+                        <View key={i} style={{ borderBottomColor: T.border }} className="flex-row justify-between items-center py-2.5 border-b">
                           <View className="flex-1">
-                            <Text className="text-white font-bold">{rec.studentId?.name}</Text>
-                            <Text className="text-muted text-xs">{rec.studentId?.enrollmentNo}</Text>
-                            {rec.remarks ? <Text className="text-muted text-xs italic mt-0.5">"{rec.remarks}"</Text> : null}
+                            <Text style={{ color: T.text }} className="font-bold">{rec.studentId?.name}</Text>
+                            <Text style={{ color: T.muted }} className="text-xs">{rec.studentId?.enrollmentNo}</Text>
+                            {rec.remarks ? <Text style={{ color: T.muted }} className="text-xs italic mt-0.5">"{rec.remarks}"</Text> : null}
                           </View>
                           <View className="flex-row items-center gap-2">
-                            <View className={`px-2 py-1 rounded-full ${rec.status === 'present' ? 'bg-success/20' : rec.status === 'late' ? 'bg-warning/20' : 'bg-error/20'}`}>
-                              <Text className={`text-xs font-bold uppercase ${rec.status === 'present' ? 'text-success' : rec.status === 'late' ? 'text-warning' : 'text-error'}`}>{rec.status}</Text>
+                            <View style={{ backgroundColor: `${rec.status === 'present' ? T.success : rec.status === 'late' ? T.warning : T.error}20` }} className="px-2 py-1 rounded-full">
+                              <Text style={{ color: rec.status === 'present' ? T.success : rec.status === 'late' ? T.warning : T.error }} className="text-xs font-bold uppercase">{rec.status}</Text>
                             </View>
                             <TouchableOpacity
                               onPress={() => openOverride(rec)}
-                              className="bg-primary/20 p-1.5 rounded-lg"
+                              style={{ backgroundColor: `${T.accent}20` }}
+                              className="p-1.5 rounded-lg"
                             >
-                              <Ionicons name="create-outline" size={16} color="#6366f1" />
+                              <Ionicons name="create-outline" size={16} color={T.accent} />
                             </TouchableOpacity>
                             <TouchableOpacity
                               onPress={() => navigation.navigate('FacultyChat', { studentId: rec.studentId?._id, studentName: rec.studentId?.name })}
-                              className="bg-success/20 p-1.5 rounded-lg"
+                              style={{ backgroundColor: `${T.success}20` }}
+                              className="p-1.5 rounded-lg"
                             >
-                              <Ionicons name="chatbubble-outline" size={16} color="#22c55e" />
+                              <Ionicons name="chatbubble-outline" size={16} color={T.success} />
                             </TouchableOpacity>
                           </View>
                         </View>
                       ))
                     ) : (
-                      <Text className="text-muted text-center py-4">No attendance marked yet for this session.</Text>
+                      <Text style={{ color: T.muted }} className="text-center py-4">No attendance marked yet for this session.</Text>
                     )}
                   </View>
                 )}
@@ -212,51 +224,49 @@ export default function AttendanceViewerScreen() {
       {/* Override Modal */}
       <Modal visible={overrideModal} transparent animationType="slide">
         <View className="flex-1 justify-end bg-black/60">
-          <View className="bg-card rounded-t-3xl p-6">
-            <Text className="text-white text-xl font-bold mb-1">Override Attendance</Text>
-            <Text className="text-muted text-sm mb-6">{overrideRecord?.studentId?.name}</Text>
+          <View style={{ backgroundColor: T.card }} className="rounded-t-3xl p-6">
+            <Text style={{ color: T.text }} className="text-xl font-bold mb-1">Override Attendance</Text>
+            <Text style={{ color: T.muted }} className="text-sm mb-6">{overrideRecord?.studentId?.name}</Text>
 
-            <Text className="text-muted text-sm font-bold mb-2">Status</Text>
+            <Text style={{ color: T.muted }} className="text-sm font-bold mb-2">Status</Text>
             <View className="flex-row mb-4">
-              {STATUS_OPTIONS.map(s => (
-                <TouchableOpacity
-                  key={s}
-                  onPress={() => setOverrideStatus(s)}
-                  className={`flex-1 mr-2 py-3 rounded-xl border items-center ${
-                    overrideStatus === s
-                      ? s === 'present' ? 'bg-success/20 border-success' : s === 'late' ? 'bg-warning/20 border-warning' : 'bg-error/20 border-error'
-                      : 'bg-surface border-border'
-                  }`}
-                >
-                  <Text className={`font-bold text-xs uppercase ${
-                    overrideStatus === s
-                      ? s === 'present' ? 'text-success' : s === 'late' ? 'text-warning' : 'text-error'
-                      : 'text-muted'
-                  }`}>{s}</Text>
-                </TouchableOpacity>
-              ))}
+              {STATUS_OPTIONS.map(s => {
+                const sColor = s === 'present' ? T.success : s === 'late' ? T.warning : T.error;
+                return (
+                  <TouchableOpacity
+                    key={s}
+                    onPress={() => setOverrideStatus(s)}
+                    style={{ backgroundColor: overrideStatus === s ? `${sColor}20` : T.bg, borderColor: overrideStatus === s ? sColor : T.border }}
+                    className="flex-1 mr-2 py-3 rounded-xl border items-center"
+                  >
+                    <Text style={{ color: overrideStatus === s ? sColor : T.muted }} className="font-bold text-xs uppercase">{s}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            <Text className="text-muted text-sm font-bold mb-2">Remarks (optional)</Text>
+            <Text style={{ color: T.muted }} className="text-sm font-bold mb-2">Remarks (optional)</Text>
             <TextInput
-              className="bg-surface text-white p-3 rounded-xl border border-border mb-6"
+              style={{ backgroundColor: T.bg, color: T.text, borderColor: T.border }}
+              className="p-3 rounded-xl border mb-6"
               placeholder="Add a remark..."
-              placeholderTextColor="#64748b"
+              placeholderTextColor={T.muted}
               value={overrideRemarks}
               onChangeText={setOverrideRemarks}
             />
 
             <View className="flex-row gap-3">
-              <TouchableOpacity onPress={() => setOverrideModal(false)} className="flex-1 p-4 rounded-xl border border-border items-center">
-                <Text className="text-muted font-bold">Cancel</Text>
+              <TouchableOpacity onPress={() => setOverrideModal(false)} style={{ borderColor: T.border }} className="flex-1 p-4 rounded-xl border items-center">
+                <Text style={{ color: T.muted }} className="font-bold">Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={submitOverride} disabled={overriding} className="flex-1 bg-primary p-4 rounded-xl items-center">
-                {overriding ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold">Save Override</Text>}
+              <TouchableOpacity onPress={submitOverride} disabled={overriding} style={{ backgroundColor: T.accent }} className="flex-1 p-4 rounded-xl items-center">
+                {overriding ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-bold">Save Override</Text>}
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

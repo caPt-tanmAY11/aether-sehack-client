@@ -34,6 +34,9 @@ export default function AdminHomeScreen() {
   }, [role]);
 
   const adminActions = [
+    ...(['dean', 'hod', 'superadmin'].includes(role)
+      ? [{ route: 'CreateNotice',   icon: 'megaphone-outline', color: T.success,  text: 'Publish Notice',   sub: 'Broadcast campus news' }]
+      : []),
     ...(['council', 'hod', 'dean', 'superadmin'].includes(role)
       ? [{ route: 'EventApprovals',  icon: 'flag-outline',      color: T.accent,  text: 'Event Approvals',  sub: 'Pending requests' }]
       : []),
@@ -49,8 +52,18 @@ export default function AdminHomeScreen() {
   ];
 
   const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Admin';
-  const totalStudents = stats?.deanReport?.totalStudents || stats?.departmentSize || 0;
-  const avgAttendance = stats?.attendance?.avgAttendancePercent ?? 0;
+  
+  // Hardcoded but dynamic on reload as requested by user
+  const [mockStats, setMockStats] = useState({ totalStudents: 0, avgAttendance: 0 });
+  useEffect(() => {
+    setMockStats({
+      totalStudents: Math.floor(Math.random() * (4500 - 3200 + 1)) + 3200,
+      avgAttendance: Math.floor(Math.random() * (98 - 82 + 1)) + 82
+    });
+  }, []);
+
+  const totalStudents = mockStats.totalStudents;
+  const avgAttendance = mockStats.avgAttendance;
 
   return (
     <View style={[s.root, { backgroundColor: T.bg }]}>
@@ -82,7 +95,7 @@ export default function AdminHomeScreen() {
         <View style={{ marginBottom: 28 }}>
           <Text style={[s.eyebrow, { color: T.accent }]}>{roleLabel} Portal</Text>
           <Text style={[s.heroTitle, { color: T.text }]}>
-            Welcome,{'\n'}<Text style={{ color: T.accent }}>{user?.name?.split(' ')[0]}</Text>
+            Welcome,{'\n'}<Text style={{ color: T.accent }}>{user?.name || 'Admin'}</Text>
           </Text>
           <Text style={[s.heroSub, { color: T.textSub }]}>Campus administration overview.</Text>
         </View>

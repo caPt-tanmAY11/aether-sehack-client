@@ -4,8 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../store/auth.store';
+import { useTheme } from '../../hooks/ThemeContext';
 
 export default function FacultyCoordinationScreen() {
+  const { theme: T } = useTheme();
   const navigation = useNavigation();
   const user = useAuthStore(state => state.user);
   
@@ -77,43 +79,44 @@ export default function FacultyCoordinationScreen() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border flex-row justify-between items-center">
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
+      <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1 }} className="px-4 pt-12 pb-4 flex-row justify-between items-center">
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-            <Ionicons name="arrow-back" size={24} color="#f1f5f9" />
+            <Ionicons name="arrow-back" size={24} color={T.text} />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Coordination Hub</Text>
+          <Text style={{ color: T.text }} className="text-xl font-bold">Coordination Hub</Text>
         </View>
-        <TouchableOpacity onPress={openCreateModal} className="p-2 bg-primary/20 rounded-full">
-          <Ionicons name="add" size={24} color="#6366f1" />
+        <TouchableOpacity onPress={openCreateModal} style={{ backgroundColor: `${T.accent}20` }} className="p-2 rounded-full">
+          <Ionicons name="add" size={24} color={T.accent} />
         </TouchableOpacity>
       </View>
 
       <ScrollView className="p-4 flex-1">
         {loading ? (
-          <ActivityIndicator color="#6366f1" size="large" className="mt-10" />
+          <ActivityIndicator color={T.accent} size="large" className="mt-10" />
         ) : rooms.length === 0 ? (
           <View className="items-center mt-10">
-            <Ionicons name="people-circle-outline" size={64} color="#334155" />
-            <Text className="text-muted text-lg mt-4">No coordination rooms found.</Text>
-            <Text className="text-slate-500 text-sm mt-2 text-center">Tap the + icon to create a room and invite other faculties.</Text>
+            <Ionicons name="people-circle-outline" size={64} color={T.muted} />
+            <Text style={{ color: T.muted }} className="text-lg mt-4">No coordination rooms found.</Text>
+            <Text style={{ color: T.muted }} className="text-sm mt-2 text-center">Tap the + icon to create a room and invite other faculties.</Text>
           </View>
         ) : (
           rooms.map(room => (
             <TouchableOpacity 
               key={room._id} 
               onPress={() => navigation.navigate('CoordinationChat', { room })}
-              className="bg-card p-4 rounded-2xl border border-border mb-4 flex-row items-center"
+              style={{ backgroundColor: T.card, borderColor: T.border }}
+              className="p-4 rounded-2xl border mb-4 flex-row items-center"
             >
-              <View className="w-12 h-12 rounded-full bg-primary/20 items-center justify-center mr-4">
-                <Ionicons name="chatbubbles" size={24} color="#6366f1" />
+              <View style={{ backgroundColor: `${T.accent}20` }} className="w-12 h-12 rounded-full items-center justify-center mr-4">
+                <Ionicons name="chatbubbles" size={24} color={T.accent} />
               </View>
               <View className="flex-1">
-                <Text className="text-white text-lg font-bold">{room.name}</Text>
-                <Text className="text-muted text-sm">{room.members?.length || 0} Members</Text>
+                <Text style={{ color: T.text }} className="text-lg font-bold">{room.name}</Text>
+                <Text style={{ color: T.muted }} className="text-sm">{room.members?.length || 0} Members</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#64748b" />
+              <Ionicons name="chevron-forward" size={20} color={T.muted} />
             </TouchableOpacity>
           ))
         )}
@@ -122,27 +125,28 @@ export default function FacultyCoordinationScreen() {
       {/* Create Room Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/60">
-          <View className="bg-card rounded-t-3xl p-6 h-[80%]">
+          <View style={{ backgroundColor: T.card }} className="rounded-t-3xl p-6 h-[80%]">
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-white text-xl font-bold">New Coordination Room</Text>
+              <Text style={{ color: T.text }} className="text-xl font-bold">New Coordination Room</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#64748b" />
+                <Ionicons name="close" size={24} color={T.muted} />
               </TouchableOpacity>
             </View>
 
-            <Text className="text-muted text-sm font-bold mb-2">Room Name</Text>
+            <Text style={{ color: T.muted }} className="text-sm font-bold mb-2">Room Name</Text>
             <TextInput
-              className="bg-surface text-white p-4 rounded-xl border border-border mb-6"
+              style={{ backgroundColor: T.bg, color: T.text, borderColor: T.border }}
+              className="p-4 rounded-xl border mb-6"
               placeholder="e.g. Web Dev Syllabus Planning"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={T.muted}
               value={newRoomName}
               onChangeText={setNewRoomName}
             />
 
-            <Text className="text-muted text-sm font-bold mb-2">Select Members</Text>
-            <ScrollView className="bg-surface border border-border rounded-xl mb-6">
+            <Text style={{ color: T.muted }} className="text-sm font-bold mb-2">Select Members</Text>
+            <ScrollView style={{ backgroundColor: T.bg, borderColor: T.border }} className="border rounded-xl mb-6">
               {allFaculties.length === 0 ? (
-                <Text className="text-muted p-4">Loading faculties...</Text>
+                <Text style={{ color: T.muted }} className="p-4">Loading faculties...</Text>
               ) : (
                 allFaculties.map((f, i) => {
                   const isSelected = selectedFaculties.includes(f._id);
@@ -150,13 +154,14 @@ export default function FacultyCoordinationScreen() {
                     <TouchableOpacity 
                       key={f._id}
                       onPress={() => toggleFaculty(f._id)}
-                      className={`flex-row items-center p-4 ${i < allFaculties.length - 1 ? 'border-b border-border' : ''} ${isSelected ? 'bg-primary/10' : ''}`}
+                      style={{ borderBottomColor: T.border, backgroundColor: isSelected ? `${T.accent}15` : T.bg }}
+                      className={`flex-row items-center p-4 ${i < allFaculties.length - 1 ? 'border-b' : ''}`}
                     >
                       <View className="flex-1">
-                        <Text className={`font-bold ${isSelected ? 'text-primary' : 'text-white'}`}>{f.name}</Text>
-                        <Text className="text-muted text-xs mt-0.5">{f.departmentId?.name || 'Faculty'}</Text>
+                        <Text style={{ color: isSelected ? T.accent : T.text }} className="font-bold">{f.name}</Text>
+                        <Text style={{ color: T.muted }} className="text-xs mt-0.5">{f.departmentId?.name || 'Faculty'}</Text>
                       </View>
-                      <Ionicons name={isSelected ? "checkbox" : "square-outline"} size={24} color={isSelected ? "#6366f1" : "#64748b"} />
+                      <Ionicons name={isSelected ? "checkbox" : "square-outline"} size={24} color={isSelected ? T.accent : T.muted} />
                     </TouchableOpacity>
                   );
                 })
@@ -166,9 +171,10 @@ export default function FacultyCoordinationScreen() {
             <TouchableOpacity 
               onPress={handleCreateRoom}
               disabled={creating}
-              className="bg-primary p-4 rounded-xl items-center flex-row justify-center"
+              style={{ backgroundColor: T.accent }}
+              className="p-4 rounded-xl items-center flex-row justify-center"
             >
-              {creating ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">Create Room</Text>}
+              {creating ? <ActivityIndicator color="#ffffff" /> : <Text className="text-white font-bold text-lg">Create Room</Text>}
             </TouchableOpacity>
           </View>
         </View>

@@ -13,6 +13,18 @@ export const advisingApi = {
     return res.data.data;
   },
 
+  // Faculty: create a note for an entire batch (division)
+  createBatchNote: async ({ division, noteText, category, followUpDate, sharedWithStudent }) => {
+    const res = await apiClient.post('/advising/batch', {
+      division,
+      noteText,
+      category,
+      followUpDate,
+      sharedWithStudent,
+    });
+    return res.data.data;
+  },
+
   // Faculty: all notes I've written
   getMyNotes: async () => {
     const res = await apiClient.get('/advising/my-notes');

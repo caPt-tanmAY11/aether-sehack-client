@@ -63,7 +63,7 @@ export default function FacultyHomeScreen() {
         <View style={{ marginBottom: 28 }}>
           <Text style={[s.eyebrow, { color: T.accent }]}>{timeGreet}</Text>
           <Text style={[s.heroTitle, { color: T.text }]}>
-            {user?.name?.split(' ')[0] || 'Professor'},{'\n'}
+            {user?.name || 'Professor'},{'\n'}
             <Text style={{ color: T.accent }}>Ready to inspire?</Text>
           </Text>
           <Text style={[s.heroSub, { color: T.textSub }]}>Your morning intelligence report is ready.</Text>

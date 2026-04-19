@@ -1,38 +1,33 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { pluginsApi } from '../../api/plugins.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useTheme } from '../../hooks/ThemeContext';
 
-// Icon map for known plugin slugs — falls back to a default grid icon
 const PLUGIN_ICONS = {
-  'canteen-tracker':   { name: 'restaurant',         color: '#f59e0b' },
-  'research-portal':   { name: 'flask',               color: '#8b5cf6' },
-  'library-catalog':   { name: 'library',             color: '#3b82f6' },
-  'lost-and-found':    { name: 'search',              color: '#ec4899' },
-  'sports-booking':    { name: 'football',            color: '#22c55e' },
-  'alumni-connect':    { name: 'people-circle',       color: '#06b6d4' },
+  'canteen-tracker':  { name: 'restaurant',   color: '#f59e0b' },
+  'research-portal':  { name: 'flask',         color: '#8b5cf6' },
+  'library-catalog':  { name: 'library',       color: '#3b82f6' },
+  'lost-and-found':   { name: 'search',        color: '#ec4899' },
+  'sports-booking':   { name: 'football',      color: '#22c55e' },
+  'alumni-connect':   { name: 'people-circle', color: '#06b6d4' },
 };
-
-const DEFAULT_ICON = { name: 'grid', color: '#6366f1' };
+const DEFAULT_ICON = { name: 'grid', color: '#6b38d4' };
 
 export default function MiniAppMarketplaceScreen() {
+  const { theme: T } = useTheme();
   const navigation = useNavigation();
   const [plugins, setPlugins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [launching, setLaunching] = useState(null); // slug of the one being launched
+  const [launching, setLaunching] = useState(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchPlugins();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { fetchPlugins(); }, []));
 
   const fetchPlugins = async () => {
     try {
       setLoading(true);
-      const data = await pluginsApi.getPlugins();
-      setPlugins(data || []);
+      setPlugins(await pluginsApi.getPlugins() || []);
     } catch (err) {
       console.error('Failed to fetch plugins', err);
     } finally {
@@ -45,10 +40,8 @@ export default function MiniAppMarketplaceScreen() {
       setLaunching(plugin.slug);
       const data = await pluginsApi.getLaunchToken(plugin.slug);
       navigation.navigate('MiniAppShell', {
-        slug: plugin.slug,
-        name: plugin.name,
-        appUrl: data.plugin.appUrl,
-        token: data.token,
+        slug: plugin.slug, name: plugin.name,
+        appUrl: data.plugin.appUrl, token: data.token,
       });
     } catch (err) {
       Alert.alert('Launch Failed', err?.response?.data?.message || 'Could not launch this mini-app.');
@@ -58,36 +51,39 @@ export default function MiniAppMarketplaceScreen() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View style={[s.root, { backgroundColor: T.bg }]}>
+
       {/* Header */}
-      <View className="px-4 pt-12 pb-4 bg-card border-b border-border">
-        <Text className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Aether</Text>
-        <Text className="text-white text-2xl font-bold">Mini Apps</Text>
-        <Text className="text-muted text-sm mt-1">Student-built tools, securely integrated</Text>
+      <View style={[s.header, { backgroundColor: T.card, borderBottomColor: T.border }]}>
+        <Text style={[s.eyebrow, { color: T.accent }]}>Aether Platform</Text>
+        <Text style={[s.title, { color: T.text }]}>Mini Apps</Text>
+        <Text style={[s.subtitle, { color: T.muted }]}>Student-built tools, securely integrated</Text>
       </View>
 
-      <ScrollView className="flex-1 px-4 py-4" showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         {loading ? (
-          <View className="items-center mt-16">
-            <ActivityIndicator color="#6366f1" size="large" />
-            <Text className="text-muted mt-4">Loading apps...</Text>
+          <View style={s.center}>
+            <ActivityIndicator color={T.accent} size="large" />
+            <Text style={[s.loadingText, { color: T.muted }]}>Loading apps...</Text>
           </View>
         ) : plugins.length === 0 ? (
-          <View className="items-center mt-16">
-            <Ionicons name="grid-outline" size={56} color="#334155" />
-            <Text className="text-muted text-center mt-4 text-base">No mini-apps available yet.</Text>
-            <Text className="text-slate-600 text-center text-sm mt-2">
-              Student developers can submit apps to the Aether team.
+          <View style={s.center}>
+            <View style={[s.emptyIcon, { backgroundColor: T.accentSoft, borderColor: T.accent }]}>
+              <Ionicons name="grid-outline" size={32} color={T.accent} />
+            </View>
+            <Text style={[s.emptyTitle, { color: T.text }]}>No Apps Yet</Text>
+            <Text style={[s.emptyText, { color: T.muted }]}>
+              No mini-apps available yet. Student developers can submit apps to the Aether team.
             </Text>
           </View>
         ) : (
           <>
-            <Text className="text-slate-400 text-xs uppercase font-bold tracking-wider mb-3">
+            <Text style={[s.countLabel, { color: T.muted }]}>
               {plugins.length} App{plugins.length !== 1 ? 's' : ''} Available
             </Text>
 
             {/* 2-column grid */}
-            <View className="flex-row flex-wrap justify-between">
+            <View style={s.grid}>
               {plugins.map((plugin) => {
                 const iconDef = PLUGIN_ICONS[plugin.slug] || DEFAULT_ICON;
                 const isLaunching = launching === plugin.slug;
@@ -97,53 +93,46 @@ export default function MiniAppMarketplaceScreen() {
                     onPress={() => handleLaunch(plugin)}
                     disabled={isLaunching}
                     activeOpacity={0.8}
-                    className="w-[48%] bg-card rounded-2xl border border-border mb-4 p-4 items-center"
+                    style={[s.pluginCard, { backgroundColor: T.card, borderColor: T.border }]}
                   >
-                    {/* Icon */}
-                    <View
-                      className="w-14 h-14 rounded-2xl items-center justify-center mb-3"
-                      style={{ backgroundColor: `${iconDef.color}22` }}
-                    >
+                    <View style={[s.pluginIcon, { backgroundColor: `${iconDef.color}20` }]}>
                       {isLaunching
                         ? <ActivityIndicator color={iconDef.color} />
-                        : <Ionicons name={iconDef.name} size={28} color={iconDef.color} />
+                        : <Ionicons name={iconDef.name} size={26} color={iconDef.color} />
                       }
                     </View>
-
-                    {/* Name */}
-                    <Text className="text-white font-bold text-sm text-center mb-1" numberOfLines={1}>
+                    <Text style={[s.pluginName, { color: T.text }]} numberOfLines={1}>
                       {plugin.name}
                     </Text>
-
-                    {/* Description */}
-                    <Text className="text-muted text-xs text-center" numberOfLines={2}>
+                    <Text style={[s.pluginDesc, { color: T.muted }]} numberOfLines={2}>
                       {plugin.description}
                     </Text>
-
-                    {/* Version badge */}
-                    <View className="mt-2 bg-surface px-2 py-0.5 rounded-full border border-border">
-                      <Text className="text-slate-500 text-xs">v{plugin.version}</Text>
+                    <View style={[s.versionBadge, { backgroundColor: T.iconBg, borderColor: T.border }]}>
+                      <Text style={[s.versionText, { color: T.muted }]}>v{plugin.version}</Text>
                     </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
 
-            {/* Developer callout */}
-            <TouchableOpacity 
+            {/* Dev callout */}
+            <TouchableOpacity
               onPress={() => navigation.navigate('MiniAppDeveloperPortal')}
-              className="bg-primary/10 border border-primary/30 rounded-2xl p-4 mt-2 mb-8"
+              style={[s.devCard, { backgroundColor: T.accentSoft, borderColor: T.accent }]}
+              activeOpacity={0.85}
             >
-              <View className="flex-row items-center mb-2 justify-between">
-                <View className="flex-row items-center">
-                  <Ionicons name="code-slash" size={20} color="#6366f1" />
-                  <Text className="text-primary font-bold ml-2">Build for Aether</Text>
+              <View style={s.devCardRow}>
+                <View style={[s.devIcon, { backgroundColor: T.accent }]}>
+                  <Ionicons name="code-slash" size={18} color="#ffffff" />
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#6366f1" />
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.devTitle, { color: T.accent }]}>Build for Aether</Text>
+                  <Text style={[s.devSub, { color: T.textSub }]}>
+                    Student developers can build mini-apps using the Aether Plugin API.
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={T.accent} />
               </View>
-              <Text className="text-slate-400 text-sm">
-                Student developers can build mini-apps using the Aether Plugin API. Tap here to register your app.
-              </Text>
             </TouchableOpacity>
           </>
         )}
@@ -151,3 +140,56 @@ export default function MiniAppMarketplaceScreen() {
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  root:   { flex: 1 },
+
+  header: {
+    paddingTop: 52, paddingBottom: 18, paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  eyebrow:   { fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 },
+  title:     { fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle:  { fontSize: 13, marginTop: 4 },
+
+  scroll: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 160 },
+
+  center:      { alignItems: 'center', paddingTop: 48, gap: 14 },
+  loadingText: { fontSize: 14, fontWeight: '600' },
+  emptyIcon: {
+    width: 72, height: 72, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2,
+  },
+  emptyTitle: { fontSize: 20, fontWeight: '900' },
+  emptyText:  { fontSize: 13, textAlign: 'center', lineHeight: 20, paddingHorizontal: 20 },
+
+  countLabel: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
+  pluginCard: {
+    width: '48%',
+    borderRadius: 20, borderWidth: 2,
+    padding: 16, alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.07, shadowRadius: 0, elevation: 3,
+  },
+  pluginIcon: {
+    width: 56, height: 56, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+  },
+  pluginName:    { fontSize: 14, fontWeight: '900', letterSpacing: -0.2, marginBottom: 4, textAlign: 'center' },
+  pluginDesc:    { fontSize: 11, textAlign: 'center', lineHeight: 16, marginBottom: 10 },
+  versionBadge:  { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
+  versionText:   { fontSize: 10, fontWeight: '700' },
+
+  devCard: {
+    borderRadius: 20, borderWidth: 2, padding: 16, marginTop: 8,
+  },
+  devCardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  devIcon: {
+    width: 40, height: 40, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  devTitle: { fontSize: 15, fontWeight: '900', marginBottom: 4 },
+  devSub:   { fontSize: 12, lineHeight: 17 },
+});
