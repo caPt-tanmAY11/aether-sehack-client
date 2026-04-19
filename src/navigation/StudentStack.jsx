@@ -21,6 +21,8 @@ import TimetableScreen from '../screens/student/TimetableScreen';
 import AttendanceScreen from '../screens/student/AttendanceScreen';
 import SyllabusScreen from '../screens/student/SyllabusScreen';
 import IssuesScreen from '../screens/student/IssuesScreen';
+import CreateNoticeScreen from '../screens/faculty/CreateNoticeScreen';
+import EventDetailScreen from '../screens/shared/EventDetailScreen';
 const Stack = createStackNavigator();
 
 export default function StudentStack() {
@@ -51,6 +53,8 @@ export default function StudentStack() {
       <Stack.Screen name="Attendance" component={AttendanceScreen} />
       <Stack.Screen name="Syllabus" component={SyllabusScreen} />
       <Stack.Screen name="Issues" component={IssuesScreen} />
+      <Stack.Screen name="CreateNotice" component={CreateNoticeScreen} />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} options={{ animation: 'slide_from_right' }} />
     </Stack.Navigator>
   );
 }

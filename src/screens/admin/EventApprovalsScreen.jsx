@@ -100,6 +100,14 @@ export default function EventApprovalsScreen() {
                   </View>
                 )}
 
+                <TouchableOpacity 
+                  onPress={() => navigation.navigate('EventDetail', { eventId: ev._id })}
+                  style={[s.detailBtn, { backgroundColor: T.iconBg, borderColor: T.border }]}
+                >
+                  <Ionicons name="information-circle-outline" size={18} color={T.accent} />
+                  <Text style={{ color: T.accent, fontWeight: '800', marginLeft: 8 }}>View Full Details & History</Text>
+                </TouchableOpacity>
+
                 <View style={{ flexDirection: 'row', gap: 12 }}>
                   <TouchableOpacity 
                     onPress={() => handleReview(ev._id, 'rejected')}
@@ -138,5 +146,9 @@ const s = StyleSheet.create({
   },
   actionBtn: {
     paddingVertical: 12, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center',
+  },
+  detailBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 12, borderRadius: 12, borderWidth: 1, marginBottom: 12,
   },
 });

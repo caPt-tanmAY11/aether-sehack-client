@@ -31,7 +31,7 @@ export default function CommitteeDashboardScreen() {
       const listRes = await apiClient.get(`/clubs?category=`);
       const allClubs = listRes.data.data;
       const myClub = allClubs.find(c => c.name.toLowerCase() === user.name.toLowerCase());
-      
+
       if (myClub) {
         const detailRes = await apiClient.get(`/clubs/${myClub._id}`);
         setClub(detailRes.data.data);
@@ -48,7 +48,7 @@ export default function CommitteeDashboardScreen() {
       // 3. Fetch events
       const evRes = await apiClient.get('/events/me');
       setEvents(evRes.data.data || []);
-      
+
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to load committee data');
@@ -98,7 +98,7 @@ export default function CommitteeDashboardScreen() {
   });
 
   return (
-    <ScrollView 
+    <ScrollView
       className="flex-1 bg-surface px-4 py-6"
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />}
     >
@@ -120,8 +120,8 @@ export default function CommitteeDashboardScreen() {
 
       {/* Overview Cards */}
       <View className="flex-row justify-between mb-6">
-        <TouchableOpacity 
-          onPress={() => setShowMembersModal(true)} 
+        <TouchableOpacity
+          onPress={() => setShowMembersModal(true)}
           className="bg-card flex-1 mr-2 p-4 rounded-2xl border border-border"
         >
           <Ionicons name="people" size={28} color="#6366f1" className="mb-2" />
@@ -136,7 +136,7 @@ export default function CommitteeDashboardScreen() {
       </View>
 
       {/* Event Submission Shortcut */}
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => navigation.navigate('EventSubmission')}
         className="w-full bg-primary/20 p-4 rounded-2xl border border-primary mb-8 flex-row items-center justify-between"
       >
@@ -189,14 +189,14 @@ export default function CommitteeDashboardScreen() {
       {/* Committee Calendar */}
       <Text className="text-white text-lg font-bold mb-4 mt-6">My Events Calendar</Text>
       <View className="mb-4">
-        <CalendarView 
-          value={selectedDate} 
-          onChange={setSelectedDate} 
+        <CalendarView
+          value={selectedDate}
+          onChange={setSelectedDate}
           markedDates={events.map(e => {
-            if(!e.startTime) return '';
+            if (!e.startTime) return '';
             const eDate = new Date(e.startTime);
             return new Date(eDate.getTime() - (eDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-          }).filter(Boolean)} 
+          }).filter(Boolean)}
         />
       </View>
 

@@ -24,6 +24,7 @@ import TimetableScreen from '../screens/student/TimetableScreen';
 import AttendanceScreen from '../screens/student/AttendanceScreen';
 import SyllabusScreen from '../screens/student/SyllabusScreen';
 import IssuesScreen from '../screens/student/IssuesScreen';
+import EventDetailScreen from '../screens/shared/EventDetailScreen';
 
 const Stack = createStackNavigator();
 
@@ -55,6 +56,7 @@ export default function AdminStack() {
       <Stack.Screen name="Attendance" component={AttendanceScreen} />
       <Stack.Screen name="Syllabus" component={SyllabusScreen} />
       <Stack.Screen name="Issues" component={IssuesScreen} />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} />
     </Stack.Navigator>
   );
 }

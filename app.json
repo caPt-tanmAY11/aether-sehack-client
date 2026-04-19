@@ -1,30 +1,32 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "Aether",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/aetherLogo.png",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/aetherLogo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0f172a"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/aetherLogo.png",
+      "bundleIdentifier": "com.av6sherlock.mobile"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/aetherLogo.png",
+        "backgroundColor": "#0f172a"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.av6sherlock.mobile"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/aetherLogo.png"
     },
     "plugins": [
       "@react-native-community/datetimepicker",

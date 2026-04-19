@@ -11,6 +11,7 @@ import IssuesScreen from '../screens/student/IssuesScreen';
 import ProfileScreen from '../screens/student/ProfileScreen';
 import ClubsScreen from '../screens/student/ClubsScreen';
 import MiniAppMarketplaceScreen from '../screens/student/MiniAppMarketplaceScreen';
+import NoticesScreen from '../screens/student/NoticesScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,6 +28,7 @@ export default function StudentTabs() {
           else if (route.name === 'Attendance') iconName = focused ? 'location' : 'location-outline';
           else if (route.name === 'Syllabus') iconName = focused ? 'book' : 'book-outline';
           else if (route.name === 'Events') iconName = focused ? 'flag' : 'flag-outline';
+          else if (route.name === 'Notices') iconName = focused ? 'megaphone' : 'megaphone-outline';
           else if (route.name === 'Issues') iconName = focused ? 'warning' : 'warning-outline';
           else if (route.name === 'Clubs') iconName = focused ? 'people' : 'people-outline';
           else if (route.name === 'Apps') iconName = focused ? 'grid' : 'grid-outline';
@@ -54,6 +56,7 @@ export default function StudentTabs() {
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Central Hub' }} />
       <Tab.Screen name="Attendance" component={AttendanceScreen} />
       <Tab.Screen name="Syllabus" component={SyllabusScreen} />
+      <Tab.Screen name="Notices" component={NoticesScreen} options={{ title: 'Notices' }} />
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Issues" component={IssuesScreen} />
       <Tab.Screen name="Clubs" component={ClubsScreen} />

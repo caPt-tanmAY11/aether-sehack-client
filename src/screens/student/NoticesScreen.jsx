@@ -5,14 +5,17 @@ import { noticesApi } from '../../api/notices.api';
 import { useAuthStore } from '../../store/auth.store';
 import { useSocket } from '../../hooks/SocketContext';
 import { useTheme } from '../../hooks/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 
-export default function NoticesScreen({ navigation }) {
+export default function NoticesScreen() {
+  const navigation = useNavigation();
   const { theme: T } = useTheme();
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const role = useAuthStore(state => state.role);
   const isFacultyOrAdmin = role === 'faculty' || role === 'hod' || role === 'dean';
   const socket = useSocket();
+  const canGoBack = navigation.canGoBack();
 
   useEffect(() => {
     fetchNotices();
@@ -41,9 +44,11 @@ export default function NoticesScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: T.bg }}>
       <View style={{ backgroundColor: T.card, borderBottomColor: T.border, borderBottomWidth: 1 }} className="px-4 pt-12 pb-4 flex-row justify-between items-center">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ backgroundColor: T.bg }} className="mr-4 p-2 rounded-full">
-            <Ionicons name="arrow-back" size={24} color={T.text} />
-          </TouchableOpacity>
+          {canGoBack && (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ backgroundColor: T.bg }} className="mr-4 p-2 rounded-full">
+              <Ionicons name="arrow-back" size={24} color={T.text} />
+            </TouchableOpacity>
+          )}
           <Text style={{ color: T.text }} className="text-xl font-bold">Campus Notices</Text>
         </View>
         {isFacultyOrAdmin && (
@@ -52,6 +57,7 @@ export default function NoticesScreen({ navigation }) {
           </TouchableOpacity>
         )}
       </View>
+
 
       <ScrollView className="p-4 flex-1">
         {loading ? (

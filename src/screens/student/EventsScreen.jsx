@@ -103,7 +103,12 @@ export default function EventsScreen() {
               myEvents.map((event, i) => {
                 const palette = stagePalette(event.currentStage);
                 return (
-                  <View key={i} style={[s.eventCard, { backgroundColor: T.card, borderColor: T.border }]}>
+                  <TouchableOpacity
+                    key={i}
+                    activeOpacity={0.88}
+                    onPress={() => navigation.navigate('EventDetail', { event })}
+                    style={[s.eventCard, { backgroundColor: T.card, borderColor: T.border }]}
+                  >
                     <View style={[s.eventBar, { backgroundColor: palette.text }]} />
                     <View style={s.eventBody}>
                       <View style={s.eventTitleRow}>
@@ -132,8 +137,14 @@ export default function EventsScreen() {
                           </Text>
                         </View>
                       )}
+                      {/* View History CTA */}
+                      <View style={[s.viewHistoryRow, { borderTopColor: T.border }]}>
+                        <Ionicons name="time-outline" size={12} color={T.accent} />
+                        <Text style={[s.viewHistoryText, { color: T.accent }]}>View Approval History & PDF</Text>
+                        <Ionicons name="chevron-forward" size={12} color={T.accent} />
+                      </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               })
             )
@@ -234,4 +245,10 @@ const s = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.2)',
   },
+
+  viewHistoryRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingTop: 12, marginTop: 12, borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  viewHistoryText: { fontSize: 13, fontWeight: '800', flex: 1 },
 });
