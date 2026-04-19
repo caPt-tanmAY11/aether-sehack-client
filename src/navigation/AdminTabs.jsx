@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
+import HomeScreen from '../screens/student/HomeScreen';
 import AnalyticsDashboardScreen from '../screens/admin/AnalyticsDashboardScreen';
 import EventApprovalsScreen from '../screens/admin/EventApprovalsScreen';
 import NotificationsScreen from '../screens/student/NotificationsScreen';
@@ -19,7 +20,8 @@ export default function AdminTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+          if (route.name === 'Personal') iconName = focused ? 'person-circle' : 'person-circle-outline';
+          else if (route.name === 'Admin' || route.name === 'Council') iconName = focused ? 'briefcase' : 'briefcase-outline';
           else if (route.name === 'Analytics') iconName = focused ? 'bar-chart' : 'bar-chart-outline';
           else if (route.name === 'Approvals') iconName = focused ? 'checkmark-circle' : 'checkmark-circle-outline';
           else if (route.name === 'Notifications') iconName = focused ? 'notifications' : 'notifications-outline';
@@ -41,12 +43,17 @@ export default function AdminTabs() {
         headerTintColor: '#f1f5f9',
       })}
     >
-      <Tab.Screen name="Home" component={AdminHomeScreen} options={{ title: `${role?.toUpperCase() ?? 'Admin'} Portal` }} />
+      <Tab.Screen name="Personal" component={HomeScreen} options={{ title: 'Personal' }} />
+      <Tab.Screen 
+        name={role === 'council' ? 'Council' : 'Admin'} 
+        component={AdminHomeScreen} 
+        options={{ title: role === 'council' ? 'Council Duties' : 'Admin' }} 
+      />
       {(role === 'hod' || role === 'dean' || role === 'superadmin') && (
         <Tab.Screen name="Analytics" component={AnalyticsDashboardScreen} />
       )}
       {(role === 'council' || role === 'hod' || role === 'dean' || role === 'superadmin') && (
-        <Tab.Screen name="Approvals" component={EventApprovalsScreen} options={{ title: 'Event Approvals' }} />
+        <Tab.Screen name="Approvals" component={EventApprovalsScreen} options={{ title: 'Approvals' }} />
       )}
       <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />

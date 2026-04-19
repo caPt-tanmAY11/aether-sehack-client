@@ -8,6 +8,7 @@ import { attendanceApi } from '../../api/attendance.api';
 import { timetableApi } from '../../api/timetable.api';
 import { useAuthStore } from '../../store/auth.store';
 import CalendarPicker from '../../components/CalendarPicker';
+import { useSocket } from '../../hooks/SocketContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -84,9 +85,21 @@ export default function AttendanceScreen() {
     return DAYS[d.getDay()];
   };
 
+  const socket = useSocket();
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('attendance_updated', (data) => {
+        console.log('[AttendanceScreen] Real-time update received:', data);
+        fetchData();
+      });
+      return () => socket.off('attendance_updated');
+    }
+  }, [socket]);
 
   const fetchData = async () => {
     try {

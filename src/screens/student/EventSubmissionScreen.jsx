@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal } from 'react-native';
 import { eventsApi } from '../../api/events.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -36,10 +36,13 @@ export default function EventSubmissionScreen() {
     else setEnd(selectedDate);
   };
 
-  const handleSubmit = async () => {
+  const [conflictData, setConflictData] = useState(null);
+  const [showConflictModal, setShowConflictModal] = useState(false);
+
+  const handleSubmit = async (force = false) => {
     try {
       setLoading(true);
-      await eventsApi.createEvent({
+      const res = await eventsApi.createEvent({
         title,
         description,
         venue,
@@ -48,12 +51,41 @@ export default function EventSubmissionScreen() {
         expectedAttendance: Number(expectedAttendance),
         templateType
       });
+      
       Alert.alert('Success', 'Event submitted to Council for review!');
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Error', err?.response?.data?.message || err.message || 'Failed to submit event');
+      if (err?.response?.status === 409) {
+        setConflictData(err.response.data);
+        setShowConflictModal(true);
+      } else {
+        Alert.alert('Error', err?.response?.data?.message || err.message || 'Failed to submit event');
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const applySlot = (slot) => {
+    // slot format from AI: "YYYY-MM-DD HH:mm - HH:mm"
+    try {
+      const parts = slot.split(' '); // ["2024-05-20", "10:00", "-", "12:00"]
+      const datePart = parts[0];
+      const startTime = parts[1];
+      const endTime = parts[3];
+      
+      const newStart = new Date(`${datePart}T${startTime}:00`);
+      const newEnd = new Date(`${datePart}T${endTime}:00`);
+      
+      if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) throw new Error('Invalid Date');
+
+      setStart(newStart);
+      setEnd(newEnd);
+      setShowConflictModal(false);
+      Alert.alert('Slot Applied', 'The suggested time slot has been applied to your form. You can now resubmit.');
+    } catch (e) {
+      console.error('Failed to parse suggested slot', e);
+      Alert.alert('Error', 'Failed to apply this slot. Please select another or enter manually.');
     }
   };
 
@@ -176,6 +208,57 @@ export default function EventSubmissionScreen() {
           onChange={handlePickerChange}
         />
       )}
+
+      {/* AI Conflict Resolver Modal */}
+      <Modal
+        visible={showConflictModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowConflictModal(false)}
+      >
+        <View className="flex-1 bg-black/60 justify-end">
+          <View className="bg-surface rounded-t-[32px] p-6 border-t border-primary/30">
+            <View className="items-center mb-6">
+              <View className="w-16 h-16 rounded-full bg-error/20 items-center justify-center mb-4 border border-error/30">
+                <Ionicons name="warning" size={32} color="#ef4444" />
+              </View>
+              <Text className="text-white text-xl font-bold text-center">AI Conflict Resolver</Text>
+              <Text className="text-muted text-center mt-2 px-4">
+                {conflictData?.message || 'The selected venue is occupied during this time.'}
+              </Text>
+            </View>
+
+            <Text className="text-primary font-bold text-sm mb-3 uppercase tracking-widest">AI Suggested Slots</Text>
+            {conflictData?.data?.suggestions?.length > 0 ? (
+              conflictData.data.suggestions.map((slot, i) => (
+                <TouchableOpacity
+                  key={i}
+                  onPress={() => applySlot(slot)}
+                  className="bg-card border border-border p-4 rounded-2xl mb-3 flex-row items-center justify-between"
+                >
+                  <View className="flex-1">
+                    <Text className="text-white font-bold">{slot}</Text>
+                    <Text className="text-muted text-xs mt-1">Free for booking • 95%+ Approval Probability</Text>
+                  </View>
+                  <Ionicons name="add-circle" size={24} color="#6366f1" />
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View className="bg-card p-4 rounded-2xl mb-4 items-center">
+                <Text className="text-muted text-sm italic">AI is unable to find alternative slots for this date.</Text>
+              </View>
+            )}
+
+            <TouchableOpacity 
+              onPress={() => setShowConflictModal(false)}
+              className="mt-4 bg-surface border border-border p-4 rounded-2xl items-center"
+            >
+              <Text className="text-white font-bold">Cancel</Text>
+            </TouchableOpacity>
+            <View className="h-6" />
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

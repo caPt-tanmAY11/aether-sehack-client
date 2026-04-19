@@ -6,14 +6,13 @@ import StudentStack from './StudentStack';
 import FacultyStack from './FacultyStack';
 import AdminStack from './AdminStack';
 import CommitteeStack from './CommitteeStack';
-import { useSocket } from '../hooks/useSocket';
+import { useSocket } from '../hooks/SocketContext';
 
 export default function RootNavigator() {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const role = useAuthStore(state => state.role);
   
-  // Initialize socket connection if authenticated
-  useSocket();
+  // The context provider handles connection automatically
 
   if (!isAuthenticated) {
     return <LoginScreen />;

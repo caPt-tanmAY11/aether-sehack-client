@@ -114,6 +114,14 @@ export default function EventsScreen() {
                     <Text className="text-slate-400 text-xs">Approval Doc Generated</Text>
                   </View>
                 )}
+                {event.conflictResult?.probability && (
+                  <View className="flex-row items-center mt-2 px-1">
+                    <Ionicons name="trending-up" size={14} color="#6366f1" />
+                    <Text className="text-primary text-xs font-bold ml-1">
+                      {event.conflictResult.probability}% AI Approval Confidence
+                    </Text>
+                  </View>
+                )}
               </View>
             ))
           )

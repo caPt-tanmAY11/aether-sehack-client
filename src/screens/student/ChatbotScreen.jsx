@@ -40,7 +40,12 @@ export default function ChatbotScreen({ navigation }) {
 
     try {
       const response = await chatbotApi.chat(userMessage.content);
-      const botMessage = { role: 'assistant', content: response.response, classification: response.classification };
+      const botMessage = { 
+        role: 'assistant', 
+        content: response.response, 
+        classification: response.classification,
+        uiAction: response.uiAction 
+      };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I am having trouble connecting to the server right now.' }]);
@@ -74,12 +79,27 @@ export default function ChatbotScreen({ navigation }) {
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {messages.map((msg, i) => (
-          <View key={i} className={`mb-4 max-w-[80%] ${msg.role === 'user' ? 'self-end' : 'self-start'}`}>
+          <View key={i} className={`mb-4 max-w-[85%] ${msg.role === 'user' ? 'self-end' : 'self-start'}`}>
             {msg.classification && msg.role === 'assistant' && (
               <Text className="text-xs text-muted mb-1 ml-1 capitalize">{msg.classification} Agent</Text>
             )}
             <View className={`p-4 rounded-2xl ${msg.role === 'user' ? 'bg-primary rounded-tr-sm' : 'bg-card border border-border rounded-tl-sm'}`}>
               <Text className="text-white text-base leading-6">{msg.content}</Text>
+              
+              {/* Interactive AI Action Button */}
+              {msg.uiAction && (
+                <TouchableOpacity 
+                  onPress={() => {
+                    if (msg.uiAction.type === 'navigate') {
+                      navigation.navigate(msg.uiAction.screen, msg.uiAction.params);
+                    }
+                  }}
+                  className="mt-4 bg-primary/20 border border-primary p-3 px-4 rounded-xl flex-row items-center justify-between"
+                >
+                  <Text className="text-primary font-bold">{msg.uiAction.label}</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#6366f1" />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         ))}

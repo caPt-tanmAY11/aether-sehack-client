@@ -71,7 +71,8 @@ export default function MyDuesScreen() {
       };
 
       let paymentData;
-      if (RazorpayCheckout) {
+      // Robust check for native module (will be missing/null in Expo Go)
+      if (RazorpayCheckout && typeof RazorpayCheckout.open === 'function') {
         paymentData = await RazorpayCheckout.open(options);
       } else {
         // --- EXPO GO MOCK FLOW ---

@@ -7,6 +7,7 @@ import { timetableApi } from '../../api/timetable.api';
 import { paymentsApi } from '../../api/payments.api';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSocket } from '../../hooks/SocketContext';
 
 export default function HomeScreen() {
   const user = useAuthStore(state => state.user);
@@ -19,25 +20,38 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [outstanding, setOutstanding] = useState({ totalRupees: '0.00', count: 0 });
 
+  const socket = useSocket();
+
+  const fetchDashboardData = async () => {
+    try {
+      const [attRes, classRes, duesRes] = await Promise.all([
+        attendanceApi.getReport().catch(() => null),
+        timetableApi.getNextClass().catch(() => null),
+        paymentsApi.getOutstanding().catch(() => null),
+      ]);
+      setAttendance(attRes);
+      setNextClass(classRes);
+      if (duesRes) setOutstanding(duesRes);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [attRes, classRes, duesRes] = await Promise.all([
-          attendanceApi.getReport().catch(() => null),
-          timetableApi.getNextClass().catch(() => null),
-          paymentsApi.getOutstanding().catch(() => null),
-        ]);
-        setAttendance(attRes);
-        setNextClass(classRes);
-        if (duesRes) setOutstanding(duesRes);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('attendance_updated', () => {
+        console.log('[HomeScreen] Real-time attendance update');
+        fetchDashboardData();
+      });
+      return () => socket.off('attendance_updated');
+    }
+  }, [socket]);
 
   return (
     <ScrollView className="flex-1 bg-surface px-4 py-6">
@@ -97,7 +111,10 @@ export default function HomeScreen() {
       </View>
 
       {nextClass && (
-        <View className="bg-primary/20 p-4 rounded-2xl border border-primary mb-6 flex-row items-center justify-between">
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Timetable')}
+          className="bg-primary/20 p-4 rounded-2xl border border-primary mb-6 flex-row items-center justify-between"
+        >
           <View>
             <Text className="text-primary font-bold text-sm mb-1 uppercase tracking-wider">Next Class</Text>
             <Text className="text-white text-lg font-bold">{nextClass.subject?.name}</Text>
@@ -108,7 +125,7 @@ export default function HomeScreen() {
           <View className="w-12 h-12 bg-primary rounded-full items-center justify-center">
             <Ionicons name="time" size={24} color="white" />
           </View>
-        </View>
+        </TouchableOpacity>
       )}
 
       <Text className="text-white text-lg font-bold mb-4">Quick Actions</Text>
